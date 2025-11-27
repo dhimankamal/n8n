@@ -1,6 +1,6 @@
 {
   "createdAt": "2025-11-27T07:25:51.670Z",
-  "updatedAt": "2025-11-27T07:38:22.000Z",
+  "updatedAt": "2025-11-27T07:49:43.000Z",
   "id": "2CAWHjSTyEQgG2nx",
   "name": "Daily workflow backup",
   "active": false,
@@ -16,8 +16,8 @@
       "name": "Create new workflow in n8n",
       "type": "n8n-nodes-base.n8n",
       "position": [
-        384,
-        1152
+        -64,
+        768
       ],
       "typeVersion": 1,
       "credentials": {
@@ -45,7 +45,7 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "position": [
         -1632,
-        640
+        576
       ],
       "typeVersion": 1.2
     },
@@ -69,8 +69,8 @@
       "name": "List files from repo",
       "type": "n8n-nodes-base.github",
       "position": [
-        -1008,
-        768
+        -1184,
+        672
       ],
       "webhookId": "0614066f-212d-4f9e-9da2-fa4a80b44baf",
       "typeVersion": 1,
@@ -104,8 +104,8 @@
       "name": "GitHub",
       "type": "n8n-nodes-base.github",
       "position": [
-        -560,
-        768
+        -736,
+        672
       ],
       "webhookId": "71ad7d84-99cd-4fbd-a365-52537e69525b",
       "typeVersion": 1.1,
@@ -125,8 +125,8 @@
       "name": "n8n",
       "type": "n8n-nodes-base.n8n",
       "position": [
-        -784,
-        560
+        -512,
+        480
       ],
       "typeVersion": 1,
       "credentials": {
@@ -162,7 +162,7 @@
       "name": "Upload file",
       "type": "n8n-nodes-base.github",
       "position": [
-        1040,
+        608,
         288
       ],
       "webhookId": "ce4b561b-acb9-4cd8-b76f-4928dada9674",
@@ -186,7 +186,7 @@
       "name": "Json file",
       "type": "n8n-nodes-base.convertToFile",
       "position": [
-        384,
+        -64,
         288
       ],
       "typeVersion": 1.1
@@ -200,24 +200,8 @@
       "name": "To base64",
       "type": "n8n-nodes-base.extractFromFile",
       "position": [
-        608,
+        160,
         288
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
-        "content": "## CHECK WHICH IS NEWER\n\n**IF TRUE** github workflow is the most recent, n8n to be updated\n\n**IF FALSE** n8n workflow is the most recent, github to be updated\n\n",
-        "height": 400,
-        "width": 340,
-        "color": 3
-      },
-      "id": "82bfdb7f-b8b1-4c9d-a945-d490c2eb1646",
-      "name": "Sticky Note",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        256,
-        544
       ],
       "typeVersion": 1
     },
@@ -243,8 +227,8 @@
       "name": "Update file",
       "type": "n8n-nodes-base.github",
       "position": [
-        1856,
-        928
+        1280,
+        672
       ],
       "webhookId": "27218087-8df7-474d-a39f-70cfa9c34ec8",
       "typeVersion": 1,
@@ -267,8 +251,8 @@
       "name": "Json file1",
       "type": "n8n-nodes-base.convertToFile",
       "position": [
-        1200,
-        928
+        608,
+        672
       ],
       "typeVersion": 1.1
     },
@@ -281,8 +265,8 @@
       "name": "To base",
       "type": "n8n-nodes-base.extractFromFile",
       "position": [
-        1424,
-        928
+        832,
+        672
       ],
       "typeVersion": 1
     },
@@ -302,8 +286,8 @@
       "name": "n8n vs GitHub",
       "type": "n8n-nodes-base.compareDatasets",
       "position": [
-        -112,
-        640
+        -288,
+        544
       ],
       "typeVersion": 2.3
     },
@@ -322,8 +306,8 @@
       "name": "Update workflow in n8n",
       "type": "n8n-nodes-base.n8n",
       "position": [
-        976,
-        672
+        384,
+        480
       ],
       "typeVersion": 1,
       "credentials": {
@@ -342,8 +326,8 @@
       "name": "Code - InputB",
       "type": "n8n-nodes-base.code",
       "position": [
-        768,
-        672
+        160,
+        480
       ],
       "typeVersion": 2
     },
@@ -356,8 +340,8 @@
       "name": "Code - InputA",
       "type": "n8n-nodes-base.code",
       "position": [
-        768,
-        928
+        160,
+        672
       ],
       "typeVersion": 2
     },
@@ -371,8 +355,8 @@
       "name": "Edit Fields",
       "type": "n8n-nodes-base.set",
       "position": [
-        976,
-        928
+        384,
+        672
       ],
       "typeVersion": 3.4
     },
@@ -400,7 +384,7 @@
       "name": "Edit for Upload",
       "type": "n8n-nodes-base.set",
       "position": [
-        816,
+        384,
         288
       ],
       "typeVersion": 3.4
@@ -429,41 +413,10 @@
       "name": "Edit for Update",
       "type": "n8n-nodes-base.set",
       "position": [
-        1648,
-        928
+        1056,
+        672
       ],
       "typeVersion": 3.4
-    },
-    {
-      "parameters": {
-        "content": "## IF ONLY IN N8N\nUpdate GitHub with the relevant workflows",
-        "height": 320,
-        "width": 1000
-      },
-      "id": "e5642ddf-6901-4fa8-b326-a846ccbfcf50",
-      "name": "Sticky Note1",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        256,
-        160
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
-        "content": "## IF ONLY IN GITHUB\nCreate new workflow in n8n",
-        "height": 340,
-        "width": 340,
-        "color": 6
-      },
-      "id": "a4e0c6ab-1c80-44eb-b6ea-b0938ba325e1",
-      "name": "Sticky Note2",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        256,
-        1008
-      ],
-      "typeVersion": 1
     },
     {
       "parameters": {
@@ -493,8 +446,8 @@
       "name": "If n8n before GitHub",
       "type": "n8n-nodes-base.if",
       "position": [
-        384,
-        768
+        -64,
+        576
       ],
       "typeVersion": 2.2
     },
@@ -508,8 +461,8 @@
       "name": "Decode to json",
       "type": "n8n-nodes-base.set",
       "position": [
-        -352,
-        768
+        -512,
+        672
       ],
       "typeVersion": 3.4
     },
@@ -541,8 +494,8 @@
       "name": "Filter",
       "type": "n8n-nodes-base.filter",
       "position": [
-        -784,
-        768
+        -960,
+        672
       ],
       "typeVersion": 2.2
     },
@@ -554,19 +507,19 @@
               "id": "850e7497-0f2f-470e-a5a2-a85a0c12aaa2",
               "name": "github_account_name",
               "type": "string",
-              "value": ""
+              "value": "dhimankamal"
             },
             {
               "id": "5c2be15a-cb93-4fe4-a512-03a1880b8713",
               "name": "github_repo_name",
               "type": "string",
-              "value": ""
+              "value": "n8n"
             },
             {
               "id": "f4f1f0c3-7a89-427c-942f-d0e74ba4583f",
               "name": "repo_workflows_path",
               "type": "string",
-              "value": ""
+              "value": "workflows"
             }
           ]
         },
@@ -577,7 +530,7 @@
       "type": "n8n-nodes-base.set",
       "position": [
         -1408,
-        640
+        576
       ],
       "typeVersion": 3.4
     }
@@ -817,7 +770,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "bddb60f0-c88d-4678-9216-5bb5661f73cd",
+  "versionId": "9ff3ee6c-90cd-479f-bc7a-b23012a10156",
   "triggerCount": 0,
   "shared": [
     {
