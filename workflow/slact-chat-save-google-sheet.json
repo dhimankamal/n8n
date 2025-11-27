@@ -1,0 +1,311 @@
+{
+  "createdAt": "2025-04-12T12:42:19.253Z",
+  "updatedAt": "2025-08-27T08:08:36.000Z",
+  "id": "kvlJlQxToT2rBuRm",
+  "name": "slact chat save google sheet",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=I am Kamalpreet Singh, Co‑Founder of Clousor Technologies. Please write a 150–200‑word LinkedIn post about {{ $json.blocks[0].elements[0].elements[0].text }} aimed at building your personal brand, growing your audience, and driving interest in Clourax’s services. Use a professional yet conversational tone. Structure the post as follows:\n\nHook: Lead with a one‑sentence hook that sparks curiosity or emotion.\n\nPersonal Story: Share a brief behind‑the‑scenes anecdote about founding Clourax or solving a customer problem.\n\nValue Proposition: Highlight three concrete benefits or insights your audience will gain (use bullet points if helpful).\n\nSocial Proof: Reference a quick result or testimonial to build credibility.\n\nConclusion & CTA: End with a direct call‑to‑action—invite readers to comment, connect, or visit your website.\n\nLimit emojis to two, include 3–5 relevant hashtags (e.g. #SaaS, #Innovation, #StartupLife), and make sure your messaging is consistent with your profile and past posts.\n\nin post no star emojis, plain hyphen bullets, and a cleaner CTA line \n\nwrite 4th stanted english",
+        "options": {}
+      },
+      "id": "c279dac1-c4d1-4486-aaf9-da0bc175f2b1",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -300,
+        2300
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "watchWorkspace": true,
+        "options": {}
+      },
+      "id": "51e24db6-a28c-4b28-bc85-28597528ef36",
+      "name": "Get message",
+      "type": "n8n-nodes-base.slackTrigger",
+      "position": [
+        -960,
+        2020
+      ],
+      "webhookId": "3146b3e9-4cfc-493f-882c-57c865380115",
+      "typeVersion": 1,
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Slack account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08M07QTQ77",
+          "mode": "list",
+          "cachedResultName": "test"
+        },
+        "text": "={{ $('AI Agent').item.json.output }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false,
+          "thread_ts": {
+            "replyValues": {
+              "thread_ts": "={{ $('Get message').item.json.event_ts }}",
+              "reply_broadcast": true
+            }
+          },
+          "mrkdwn": true,
+          "unfurl_links": true
+        }
+      },
+      "id": "11badc4d-238c-4b10-ade3-cb8c98e7ce64",
+      "name": "Send message",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        600,
+        2240
+      ],
+      "webhookId": "946ab278-f815-4bd3-a20d-49ba59d76659",
+      "typeVersion": 2.3,
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Slack account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        2560
+      ],
+      "id": "415e6fb0-8232-42cc-a492-86752452ac26",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BVUg1q7AlNfpn43M",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message": "=kamal {{ $('Get message').item.json.text }}",
+            "response": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "message"
+          ],
+          "schema": [
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "response",
+              "displayName": "response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        340,
+        2240
+      ],
+      "id": "84208ee0-7a6f-4cbe-8f65-f038db79f550",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Get message').item.json.channel }}_{{ $('Get message').item.json.blocks[0].elements[0].elements[0].user_id }}",
+        "contextWindowLength": 100
+      },
+      "id": "79a548e0-dbd3-4997-bce3-7d9aba8eaecf",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        -40,
+        2500
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Read data to Google Sheets see what post already published or written so you can improved eveey time",
+        "documentId": {
+          "__rl": true,
+          "value": "1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "kamal",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        180,
+        2500
+      ],
+      "id": "8f5bfea9-c230-449d-8889-1539007938f9",
+      "name": "This Get alrady post written",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get message": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "This Get alrady post written": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "daa51baf-f631-4247-a00b-e762a3abff3a",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-04-12T12:42:19.256Z",
+      "updatedAt": "2025-04-12T12:42:19.256Z",
+      "role": "workflow:owner",
+      "workflowId": "kvlJlQxToT2rBuRm",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
