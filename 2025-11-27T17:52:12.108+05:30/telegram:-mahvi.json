@@ -1,0 +1,1096 @@
+{
+  "createdAt": "2025-05-27T04:18:48.430Z",
+  "updatedAt": "2025-08-27T08:06:42.000Z",
+  "id": "OBvQWTCLmjEL1Wt8",
+  "name": "Telegram: mahvi",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "97cdf3ea-bbf8-4804-8adb-1485d9fa4309",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        700
+      ],
+      "webhookId": "812c60ca-64e1-4d3b-bca8-7a61c600a356",
+      "credentials": {
+        "telegramApi": {
+          "id": "gCebyFXi0sukq0VZ",
+          "name": "Telegram account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Send /mcq to get a new question.",
+        "additionalFields": {}
+      },
+      "id": "0a93c599-4296-4b99-a78c-ae1643139e6f",
+      "name": "Send MCQ",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        260,
+        800
+      ],
+      "webhookId": "5985093c-4309-47e8-9dc4-80b94e849cb4",
+      "credentials": {
+        "telegramApi": {
+          "id": "gCebyFXi0sukq0VZ",
+          "name": "Telegram account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "84cec218-35fb-4276-8b2c-2c835f551d6f",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "=/mcq",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        40,
+        700
+      ],
+      "id": "8ca66c91-1b38-4415-873a-9a715385821e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=SUBJECT: {{ $('Get Topic').item.json.subject }}\nTOPIC: {{ $('Get Topic').item.json.topic }}\n\n-------------------------------------\nQuestion: {{ $json.output.question }}\n\nOptions:\nA. {{ $json.output.options[0] }}\nB. {{ $json.output.options[1] }}\nC. {{ $json.output.options[2] }}\nD. {{ $json.output.options[3] }}\n\nYou have 5 seconds to answer this question.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        200
+      ],
+      "id": "1b0a14f0-90b0-42b5-9cc1-624ab89cf1db",
+      "name": "Telegram1",
+      "webhookId": "b2f720ee-028b-428a-9a4a-c7f2e4b3e34a",
+      "credentials": {
+        "telegramApi": {
+          "id": "gCebyFXi0sukq0VZ",
+          "name": "Telegram account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Answer: {{ $('AI Agent').item.json.output.answer }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1540,
+        200
+      ],
+      "id": "a02214c5-a907-47fe-be3e-6ed4ea0fcdd5",
+      "name": "Telegram",
+      "webhookId": "b2f720ee-028b-428a-9a4a-c7f2e4b3e34a",
+      "credentials": {
+        "telegramApi": {
+          "id": "gCebyFXi0sukq0VZ",
+          "name": "Telegram account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={\nsubject: \"{{ $json.subject }}\",\ntopic: \"{{ $json.topic }}\"\n}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an expert MCQ generator for academic subjects. Based on the given subject and topic, you must generate a high-quality multiple choice question that is:\n\nClear and concise.\n\nRelevant to the selected topic.\n\nOf moderate difficulty (suitable for school or competitive exam level).\n\nIncludes 4 options with only one correct answer.\n\nThe correct answer should be clearly identified.\n\nFormat your response as JSON with the following keys:\n\n{\n\"question\": \"Your generated question text here.\",\n\"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n\"answer\": \"Correct Option Text\"\n}\n\nUse the input subject and topic to strictly guide the question’s content.\n\nExample Inputs:\nSubject: Maths\nTopic: Profit - Loss\n\nYou should return:\n{\n\"question\": \"A shopkeeper bought an item for ₹250 and sold it for ₹300. What is his profit percentage?\",\n\"options\": [\"10%\", \"15%\", \"20%\", \"25%\"],\n\"answer\": \"20%\"\n}\n\nGenerate only one question per request."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        512,
+        600
+      ],
+      "id": "479f5901-4a7b-41db-86f9-61d97ffce8dc",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        480,
+        820
+      ],
+      "id": "34ddc338-e804-4164-b2cf-df4dbb39d667",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BVUg1q7AlNfpn43M",
+          "name": "Mahvi Account gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const TOPICS = {\n\tMATHS: [\n\t\t'Multiplication',\n\t\t'Squares & Square Roots',\n\t\t'Cubes & Cube Roots',\n\t\t'Profit - Loss',\n\t\t'Percentage'\n\t],\n\tENGLISH: [\n\t\t'Noun',\n\t\t'Pronoun',\n\t\t'Adjectives',\n\t\t'Tenses',\n\t\t'Verbs',\n\t\t'Synonyms',\n\t\t'Antonyms',\n\t\t'Idioms',\n\t\t'One Word Substitution'\n\t],\n\tPUNJABI: [\n\"ਨਾਂਵ\",\n\"ਪੜਨਾਂਵ\",\n\"ਵਿਸ਼ੇਸ਼ਣ\",\n\"ਕਿਰਿਆ\",\n\"ਕਿਰਿਆ ਵਿਸ਼ੇਸ਼ਣ\",\n\"ਸੰਯੋਜਕ\",\n\"ਵਿਯੋਗ\",\n\"ਭਾਵ-ਵਾਚਕ ਸੰਯੁਕਤ ਸ਼ਬਦ\",\n\"ਲਿੰਗ\",\n\"ਵਚਨ\",\n\"ਕਾਰਕ\",\n\"ਕਾਲ\",\n\"ਵਾਕਯਾਂਸ਼ ਅਤੇ ਵਾਕ\",\n\"ਸਮਾਨਾਰਥਕ ਸ਼ਬਦ\",\n\"ਵਿਪਰੀਤ ਅਰਥਕ ਸ਼ਬਦ\",\n\"ਅਣੁਵਾਦ\",\n\"ਮੁਹਾਵਰੇ ਅਤੇ ਲੋਕੋਕਤੀਆਂ\"\n],\n\tPUNJAB_GK: ['History', 'Geography', 'Politics'],\n\tCURRENT_AFFAIRS: ['Current Affairs related to Punjab and India'],\n\tCOMPUTER: ['MS Word', 'MS PowerPoint']\n};\n\n// Choose a random subject\nconst subjects = Object.keys(TOPICS);\nconst randomSubject = subjects[Math.floor(Math.random() * subjects.length)];\n\n// Choose a random topic from the selected subject\nconst topics = TOPICS[randomSubject];\nconst randomTopic = topics[Math.floor(Math.random() * topics.length)];\n\n// Choose a random MCQ\n\nreturn [\n\t{\n\t\tjson: {\n\t\t\tsubject: randomSubject,\n\t\t\ttopic: randomTopic\n\t\t}\n\t}\n];\n"
+      },
+      "id": "62025e53-a23d-40d8-a55f-af29775dc4ab",
+      "name": "Get Topic",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        260,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"question\": \"A shopkeeper bought an item for ₹250 and sold it for ₹300. What is his profit percentage?\",\n\"options\": [\"10%\", \"15%\", \"20%\", \"25%\"],\n\"answer\": \"20%\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        820
+      ],
+      "id": "e1e9dea6-e28d-428c-99a6-a6aa51e7f20b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.message_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        600,
+        820
+      ],
+      "id": "65775ce0-1bb2-46b8-98c0-32cf99cf4610",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Get Topic').item.json.subject }}",
+                    "rightValue": "PUNJAB_GK",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2d497a62-4669-42b5-8097-6621d960239a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PUNJAB_GK"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "67aa99c6-4a9f-4003-a3a7-50e239bbba87",
+                    "leftValue": "={{ $('Get Topic').item.json.subject }}",
+                    "rightValue": "MATHS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "MATHS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "95e7c2a9-be5f-46ae-a2a3-a07a60f016c7",
+                    "leftValue": "={{ $('Get Topic').item.json.subject }}",
+                    "rightValue": "ENGLISH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ENGLISH"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b59e9f97-286e-4bcf-aa7b-56e14c2ae8c9",
+                    "leftValue": "={{ $('Get Topic').item.json.subject }}",
+                    "rightValue": "PUNJABI",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PUNJABI"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "16ee36f5-7d4e-4292-922f-bded32598527",
+                    "leftValue": "={{ $('Get Topic').item.json.subject }}",
+                    "rightValue": "CURRENT_AFFAIRS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CURRENT_AFFAIRS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f0df3cbb-4b84-4436-be95-e3bb5f83e968",
+                    "leftValue": "={{ $('Get Topic').item.json.subject }}",
+                    "rightValue": "COMPUTER",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "COMPUTER"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        920,
+        837
+      ],
+      "id": "ecbaad3f-e98d-46b8-830c-5140f99390a6",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA",
+          "mode": "list",
+          "cachedResultName": "MCQs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1938172838,
+          "mode": "list",
+          "cachedResultName": "COMPUTER",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit#gid=1938172838"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Question": "={{ $('AI Agent').item.json.output.question }}",
+            "Options": "={{ $('AI Agent').item.json.output.options }}",
+            "answer": "={{ $('AI Agent').item.json.output.answer }}",
+            "Topic": "={{ $('Get Topic').item.json.topic }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Options",
+              "displayName": "Options",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "answer",
+              "displayName": "answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1140,
+        1200
+      ],
+      "id": "f6178a42-8a3e-450d-92ba-79041594508c",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3CdS47oCH59Cc8vI",
+          "name": "Google Sheets account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA",
+          "mode": "list",
+          "cachedResultName": "MCQs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1605258519,
+          "mode": "list",
+          "cachedResultName": "CURRENT_AFFAIRS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit#gid=1605258519"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Question": "={{ $('AI Agent').item.json.output.question }}",
+            "Options": "={{ $('AI Agent').item.json.output.options }}",
+            "answer": "={{ $('AI Agent').item.json.output.answer }}",
+            "Topic": "={{ $('Get Topic').item.json.topic }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Options",
+              "displayName": "Options",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "answer",
+              "displayName": "answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1140,
+        1400
+      ],
+      "id": "95874bd5-e470-4861-9ed6-3d85e6c59691",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3CdS47oCH59Cc8vI",
+          "name": "Google Sheets account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA",
+          "mode": "list",
+          "cachedResultName": "MCQs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 984839813,
+          "mode": "list",
+          "cachedResultName": "PUNJABI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit#gid=984839813"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Question": "={{ $json.output.question }}",
+            "Options": "={{ $json.output.options }}",
+            "answer": "={{ $json.output.answer }}",
+            "Topic": "={{ $('Get Topic').item.json.topic }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Options",
+              "displayName": "Options",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "answer",
+              "displayName": "answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1140,
+        400
+      ],
+      "id": "2858ac74-b1b2-4dfd-b864-2678701627a3",
+      "name": "Google Sheets2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3CdS47oCH59Cc8vI",
+          "name": "Google Sheets account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA",
+          "mode": "list",
+          "cachedResultName": "MCQs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1255286536,
+          "mode": "list",
+          "cachedResultName": "ENGLISH",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit#gid=1255286536"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Question": "={{ $('AI Agent').item.json.output.question }}",
+            "Options": "={{ $('AI Agent').item.json.output.options }}",
+            "answer": "={{ $('AI Agent').item.json.output.answer }}",
+            "Topic": "={{ $('Get Topic').item.json.topic }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Options",
+              "displayName": "Options",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "answer",
+              "displayName": "answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1140,
+        1000
+      ],
+      "id": "9adc7874-1d21-418a-865e-e64141e79e58",
+      "name": "Google Sheets3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3CdS47oCH59Cc8vI",
+          "name": "Google Sheets account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA",
+          "mode": "list",
+          "cachedResultName": "MCQs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1159653339,
+          "mode": "list",
+          "cachedResultName": "MATHS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit#gid=1159653339"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Question": "={{ $('AI Agent').item.json.output.question }}",
+            "Options": "={{ $('AI Agent').item.json.output.options }}",
+            "answer": "={{ $('AI Agent').item.json.output.answer }}",
+            "Topic": "={{ $('Get Topic').item.json.topic }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Options",
+              "displayName": "Options",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "answer",
+              "displayName": "answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1140,
+        600
+      ],
+      "id": "46efc23a-af22-45bf-9b24-07cd39ca7d34",
+      "name": "Google Sheets4",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3CdS47oCH59Cc8vI",
+          "name": "Google Sheets account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA",
+          "mode": "list",
+          "cachedResultName": "MCQs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "PUNJAB_GK",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ApUU6a5yYkYzhCWPdN2qtQbjFeaqZrNwBCWo6UQyoA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Question": "={{ $('AI Agent').item.json.output.question }}",
+            "Options": "={{ $('AI Agent').item.json.output.options }}",
+            "answer": "={{ $('AI Agent').item.json.output.answer }}",
+            "Topic": "={{ $('Get Topic').item.json.topic }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Options",
+              "displayName": "Options",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "answer",
+              "displayName": "answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1140,
+        800
+      ],
+      "id": "e98dbf7c-c1be-4022-a3d7-98638609ec41",
+      "name": "Google Sheets5",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3CdS47oCH59Cc8vI",
+          "name": "Google Sheets account: mahvi"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1140,
+        200
+      ],
+      "id": "d97f12d6-02fd-4b7c-83f6-21bc5e25614c",
+      "name": "Wait",
+      "webhookId": "e0e78c2b-b2f6-4ad9-a133-6efb6018d71a"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get Topic",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send MCQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Topic": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "07046b02-cf3a-4940-88e5-9839b4c3adf0",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-05-27T04:18:48.435Z",
+      "updatedAt": "2025-05-27T04:18:48.435Z",
+      "role": "workflow:owner",
+      "workflowId": "OBvQWTCLmjEL1Wt8",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
