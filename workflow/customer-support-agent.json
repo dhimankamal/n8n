@@ -1,0 +1,839 @@
+{
+  "createdAt": "2025-04-12T06:22:38.751Z",
+  "updatedAt": "2025-08-27T08:08:31.000Z",
+  "id": "juZkIaDQw6qQYX7j",
+  "name": "Customer support agent",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🟡 STEP 1 – Incoming WhatsApp Message\nListens for new WhatsApp messages.\nIf the message starts with train:, it triggers the product training flow.\nOtherwise, it goes to the customer support flow.\n**WhatsApp Business Cloud node** : [Here](https://www.notion.so/automatisation/WHATSAPP-WORKFLOW-1c63d6550fd980559679e7535938a68d?pvs=4#1c63d6550fd980f9a2a5e25a3654da82)",
+        "height": 440,
+        "width": 400
+      },
+      "id": "c385ffe6-3399-41f8-8e64-545e29c719ce",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        580,
+        900
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 🔵 STEP 3 – Customer Support Flow\nTriggered when the message **does NOT start with `train:`**.\n\n1. **AI Analyzes the Message**  \n   Understands the customer's question or problem.\n\n2. **Fetch Product Data if Needed**  \n   Reads relevant product info from Google Sheets.\n\n3. **Detect Issues Automatically**  \n   Identifies if the user is facing a specific issue.\n\n4. **Suggest Solutions**  \n   Proposes a helpful, clear response to solve the issue.\n\n5. **Log Customer Problems**  \n   Saves the problem, suggested solution, and category.\n\n6. **Respond to the User**  \n   Sends a professional and helpful WhatsApp reply.",
+        "height": 420,
+        "width": 1180,
+        "color": 6
+      },
+      "id": "a376e1c8-ceb0-431b-83d6-a47f87a7a27a",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1020,
+        1200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 🔴 STEP 2 – Product Data Training (Triggered by train:)\nTriggered when the message starts with `train:`.\n**OpenAI API keys** : [Here](https://platform.openai.com/api-keys)\n\n\n\n\n\n\n\n\n\n\n\n\n1. **Extract URL from Message**  \n   Uses regex to detect and extract the product link.\n\n2. **Fetch HTML Content**  \n   Sends an HTTP request to retrieve the full page content.\n\n3. **Clean HTML Data**  \n   Strips HTML tags, scripts, and formats the text.\n\n4. **Save Raw Product Info**  \n   Appends the cleaned content and URL into Google Sheets.\n\n5. **AI: Enhance Product Details**  \n   - Extracts Product Name  \n   - Detects Price (subscription or one-time)  \n   - Identifies Product Topic  \n   - Generates FAQs\n\n6. **Update Product Sheet**  \n   Enriches the row in Sheets with structured product data.\n",
+        "height": 660,
+        "width": 1180,
+        "color": 3
+      },
+      "id": "635d7ec0-0cea-419a-b456-aa66df4f4ebf",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1020,
+        520
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "9865cb5b-33da-490c-afc3-186457d5b564",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "leftValue": "={{ $json.messages[0].text.body }}{{ $json.text }}",
+                    "rightValue": "train:"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "train"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "5a9a1fee-b408-469f-a08c-e8d690fc9792",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notStartsWith"
+                    },
+                    "leftValue": "={{ $json.text }}",
+                    "rightValue": "train:"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "af79034a-e3bd-4d23-ad4e-6817edf80942",
+      "name": "Check If Training",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        800,
+        1140
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer le texte à analyser depuis l'input\nconst texteExemple = $input.first().json.messages[0].text.body;\n\n// Expression régulière modifiée pour capturer les URL avec ou sans protocole\nconst regex = /((?:https?:\\/\\/)?(?:www\\.)?[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}(?:\\/\\S*)?)/g;\n\n// Extraction des URL à partir du texte\nconst matches = texteExemple.match(regex) || [];\n\n// Si des URL ont été trouvées, on les mappe en objets\nif (matches.length > 0) {\n    const output = matches.map(url => ({ url }));\n    return output;\n} else {\n    // Si aucune URL n'est trouvée, on retourne les items d'entrée pour que le workflow continue\n    return $input.all();\n}\n"
+      },
+      "id": "930a045f-dd4d-43cd-90b6-6c746b8a5859",
+      "name": "Extract URL from Text",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1060,
+        600
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "50b52452-a604-4c02-869f-5370363730e6",
+      "name": "Fetch HTML Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1220,
+        600
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exemple : récupération du contenu HTML depuis le premier item\n// Si vous avez un champ nommé \"html\" dans un noeud précédent.\nconst htmlContent = $input.first().json.html;\n\n// Fonction de nettoyage du HTML\nfunction nettoyerHTML(input) {\n  if (typeof input !== 'string') {\n    throw new Error(\"Expected HTML content as a string.\");\n  }\n  let cleanedText = input;\n\n  // 1. Retirer les liens <a> et leur contenu\n  cleanedText = cleanedText.replace(/<a[^>]*>.*?<\\/a>/gs, '');\n\n  // 2. Retirer <script>, <style>, commentaires, etc.\n  cleanedText = cleanedText.replace(/<script[^>]*>.*?<\\/script>/gs, '');\n  cleanedText = cleanedText.replace(/<style[^>]*>.*?<\\/style>/gs, '');\n  cleanedText = cleanedText.replace(/<!--[\\s\\S]*?-->/g, '');\n\n  // 3. Insérer des retours à la ligne pour certaines balises\n  cleanedText = cleanedText.replace(/<h[1-6][^>]*>/gi, '\\n');\n  cleanedText = cleanedText.replace(/<\\/h[1-6]>/gi, '\\n');\n  cleanedText = cleanedText.replace(/<p[^>]*>/gi, '\\n');\n  cleanedText = cleanedText.replace(/<\\/p>/gi, '\\n');\n  cleanedText = cleanedText.replace(/<ul[^>]*>/gi, '\\n');\n  cleanedText = cleanedText.replace(/<\\/ul>/gi, '\\n');\n  cleanedText = cleanedText.replace(/<ol[^>]*>/gi, '\\n');\n  cleanedText = cleanedText.replace(/<\\/ol>/gi, '\\n');\n  cleanedText = cleanedText.replace(/<li[^>]*>/gi, '- ');\n  cleanedText = cleanedText.replace(/<\\/li>/gi, '\\n');\n\n  // 4. Supprimer toutes les balises HTML restantes\n  cleanedText = cleanedText.replace(/<[^>]+>/g, '');\n\n  // 5. Supprimer (ou ajuster) les caractères spéciaux\n  cleanedText = cleanedText.replace(/[^\\w\\sÀ-ÖØ-öø-ÿ]+/g, '');\n\n  // 6. Normaliser les espaces multiples et trim\n  cleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n\n  return cleanedText;\n}\n\n// Nettoyage\nconst result = nettoyerHTML($input.first().json.data);\n\n// Retour d'un tableau contenant l'objet final\nreturn [\n  {\n    json: {\n      cleanedText: result\n    }\n  }\n];\n"
+      },
+      "id": "9aabac21-cec4-437d-8bd3-7ad018be057a",
+      "name": "Clean HTML Content",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1380,
+        600
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 689245338,
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wa41S888Ya3sqEkBdzYiDq-5FOu_V30BOe-toX_78xQ/edit#gid=689245338",
+          "cachedResultName": "Products"
+        },
+        "columns": {
+          "value": {
+            "Product Link": "={{ $('Extract URL from Text').item.json.url }}",
+            "Product Description": "={{ $json.cleanedText }}"
+          },
+          "schema": [
+            {
+              "id": "Product Link",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Product Link",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Product Name",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Price",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Product Price",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Description",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Product Description",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Topic",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Product Topic",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d4445cd6-d652-43f9-8eec-6b21d94b11c3",
+      "name": "Save Raw Product Info",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1560,
+        600
+      ],
+      "typeVersion": 4.5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Incoming Message Trigger').item.json.messages[0].id }}",
+        "contextWindowLength": 50
+      },
+      "id": "b959ce7a-9cac-41c4-8d74-6ddeefbddd76",
+      "name": "Short-Term Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        1820,
+        880
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1wa41S888Ya3sqEkBdzYiDq-5FOu_V30BOe-toX_78xQ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wa41S888Ya3sqEkBdzYiDq-5FOu_V30BOe-toX_78xQ/edit?usp=drivesdk",
+          "cachedResultName": "Product Sales - AI Agent WhatsApp"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 689245338,
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wa41S888Ya3sqEkBdzYiDq-5FOu_V30BOe-toX_78xQ/edit#gid=689245338",
+          "cachedResultName": "Products"
+        },
+        "columns": {
+          "value": {
+            "F&Q": "={{ $fromAI(\"product_faq\", \"these are the most common questions users might have about the product, including answers if available\") }}\n",
+            "Product Link": "={{ $fromAI(\"product_url\",\"this is the website link of the product\") }}",
+            "Product Name": "={{ $fromAI(\"product_name\",\"this is the name of the product\") }}",
+            "Product Price": "={{ $fromAI(\"product_price\",\"this is the price of the product\") }}",
+            "Product Topic": "={{ $fromAI(\"product_topic\",\"this is the topic of the product that specifies what it is for, who it is for and what the key benefits are\") }}"
+          },
+          "schema": [
+            {
+              "id": "Product Link",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Product Link",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Product Name",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Price",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Product Price",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Description",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Product Description",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Topic",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Product Topic",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "F&Q",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "F&Q",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Product Link"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "dac235c2-223f-44c0-a548-1326c5f95a56",
+      "name": "Update Product Sheet",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "position": [
+        2000,
+        880
+      ],
+      "typeVersion": 4.5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are a helpful and intelligent customer support assistant.\n\nYou have access to a Google Sheets tool that allows you to read any content from a specific sheet to gather necessary information.\nNever mention to the user that you accessed Google Sheets to retrieve any data.\n\nYour main responsibilities:\n\nUnderstand the user’s request or issue.\n\nIf the user is asking about a product, retrieve the relevant product name, price, and details as needed.\n\nDetermine whether the product price is a subscription or a one-time payment, based on the description.\n\nIf you detect that the user is facing a problem:\n\nIdentify and describe the problem clearly.\n\nPropose a practical and helpful solution.\n\nLog this interaction by adding a new row to the Google Sheet with the following columns:\n\nProblem\n\nSuggested Solution\n\nCategory (e.g., payment, login, access, delivery, technical issue, etc.)\n\nBe professional, concise, and empathetic in your responses.\nAlways aim to resolve the issue or provide the next best action."
+        }
+      },
+      "id": "4c87231d-11f5-4abf-b52b-1f4a1954aff3",
+      "name": "AI Agent -  Customer Support Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1700,
+        1220
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=My product description :  {{ $json['Product Description'] }}\n\nMy product link : {{ $json['Product Link'] }}",
+        "options": {
+          "systemMessage": "You are a helpful and intelligent assistant.\n\nYou receive the text content of a product page.\n\nYour tasks are:\n\nExtract the product name.\n\nExtract the product price, and determine whether it is a subscription or a one-time payment.\n\nIdentify the product topic.\n\nExtract the most frequently asked questions (FAQs) related to the product.\n\nYou have access to a Google Sheets tool that allows you to update specific columns and cells.\n\nAlways add the following data to the same row as the product URL in the Google Sheet:\n\nProduct Name\n\nProduct Price (with subscription/one-time label)\n\nProduct Topic\n\nFAQs\n\nBe accurate, structured, and consistent when filling in the sheet.\nDo not mention Google Sheets in your responses."
+        }
+      },
+      "id": "71e8388f-2e74-43fb-ade6-0f6fdcc144d3",
+      "name": "AI Agent - Enhance Product Details",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1740,
+        600
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.text }}",
+        "contextWindowLength": 50
+      },
+      "id": "13b4959a-7997-43b2-99bd-f3d1a8b19bf9",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        1720,
+        1480
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "28b1cbd0-0f49-46aa-888e-48bde88ae563",
+      "name": "Read Product Sheet",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "position": [
+        1880,
+        1480
+      ],
+      "typeVersion": 4.5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U9GTxknzoPnja4s8ffOAUdMbntB6huji95xfBAZ4_v8/edit#gid=0"
+        },
+        "columns": {
+          "value": {
+            "Category": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Category', ``, 'string') }}",
+            "Solution": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Solution', ``, 'string') }}",
+            "Support Problem": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Support_Problem', ``, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "Support Problem",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Support Problem",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Solution",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Solution",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Category",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "cce356ca-61dd-4e05-bd0c-9326554f6320",
+      "name": "Log Customer Issues",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "position": [
+        2060,
+        1480
+      ],
+      "typeVersion": 4.5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C08M07QTQ77",
+          "mode": "list",
+          "cachedResultName": "test"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        380,
+        1140
+      ],
+      "id": "bb82a61f-7ad5-4f8e-be77-1bd3441012d6",
+      "name": "Slack Trigger",
+      "webhookId": "936d0ced-9810-4402-8e4f-dc6b89208669",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Slack account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08M07QTQ77",
+          "mode": "list",
+          "cachedResultName": "test"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false,
+          "thread_ts": {
+            "replyValues": {
+              "thread_ts": "={{ $('Get message').item.json.event_ts }}",
+              "reply_broadcast": true
+            }
+          },
+          "mrkdwn": true,
+          "unfurl_links": true
+        }
+      },
+      "id": "c7e61aa1-2b59-4c4a-8c00-4440693f8ec9",
+      "name": "Send message",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        2360,
+        840
+      ],
+      "webhookId": "946ab278-f815-4bd3-a20d-49ba59d76659",
+      "typeVersion": 2.3,
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Slack account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        920
+      ],
+      "id": "d053f9cd-9e34-4bfd-a3e9-5e0846859058",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BVUg1q7AlNfpn43M",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-exp",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        1460
+      ],
+      "id": "fbeef102-c6b4-42c6-ba8d-e9b8afa02fe3",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BVUg1q7AlNfpn43M",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Fetch HTML Page": {
+      "main": [
+        [
+          {
+            "node": "Clean HTML Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Training": {
+      "main": [
+        [
+          {
+            "node": "Extract URL from Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent -  Customer Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Short-Term Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent - Enhance Product Details",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean HTML Content": {
+      "main": [
+        [
+          {
+            "node": "Save Raw Product Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Product Sheet": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent -  Customer Support Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent -  Customer Support Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Customer Issues": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent -  Customer Support Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Product Sheet": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Enhance Product Details",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract URL from Text": {
+      "main": [
+        [
+          {
+            "node": "Fetch HTML Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Raw Product Info": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Enhance Product Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent -  Customer Support Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Enhance Product Details": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check If Training",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Enhance Product Details",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent -  Customer Support Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "e43513d8-d970-476a-b8b6-102e34a87da6",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-04-12T06:22:38.756Z",
+      "updatedAt": "2025-04-12T06:22:38.756Z",
+      "role": "workflow:owner",
+      "workflowId": "juZkIaDQw6qQYX7j",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
