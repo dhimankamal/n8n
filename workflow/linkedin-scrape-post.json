@@ -1,0 +1,328 @@
+{
+  "createdAt": "2025-09-13T14:34:17.618Z",
+  "updatedAt": "2025-09-28T15:58:37.000Z",
+  "id": "vLvbk0td235cROJB",
+  "name": "Linkedin Scrape post",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -240
+      ],
+      "id": "ee1eb5ab-73fa-4d06-8817-8de4d59586d0",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apimaestro~linkedin-posts-search-scraper-no-cookies/run-sync-get-dataset-items",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"date_filter\": \"past-24h\",\n   \"keyword\": \"looking for a social media agency\",\n  \"limit\": 20\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        -368
+      ],
+      "id": "a3516969-0dd2-408f-9001-252c3b4383ef",
+      "name": "HTTP Request",
+      "credentials": {
+        "apifyApi": {
+          "id": "hWYBNfIoczeK6lb3",
+          "name": "Kamal Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -32,
+        -368
+      ],
+      "id": "57aaa9a1-6de1-4f9b-9d6c-929a1742c754",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lead Qualifier - Function node for n8n\n// Input: items[] where each item.json contains LinkedIn post metadata and text\n// Output: items[] where each item.json is the JSON schema the user requested\n\nfunction containsAny(text, arr) {\n  if(!text) return false;\n  text = text.toLowerCase();\n  return arr.some(s => text.includes(s));\n}\n\nfunction uniqueMatches(text, arr) {\n  if(!text) return [];\n  const found = [];\n  const t = text.toLowerCase();\n  arr.forEach(s => {\n    if(t.includes(s) && !found.includes(s)) found.push(s);\n  });\n  return found;\n}\n\nconst excludeKeywords = [\n  \"hiring\",\"we're hiring\",\"we are hiring\",\"hiring developers\",\"hiring software engineers\",\n  \"job\",\"apply now\",\"apply\",\"vacancy\",\"vacancies\",\"job opening\",\"open position\",\"looking to hire\",\n  \"send cv\",\"send resume\",\"resume\",\"cv\"\n];\n\nconst positiveKeywords = [\n  \"mvp\",\"minimum viable product\",\"build an app\",\"build app\",\"build our app\",\n  \"replatform\",\"re-platform\",\"integration\",\"integrations\",\"integrate\",\"api\",\"apis\",\n  \"automation\",\"automate\",\"mobile app\",\"ios\",\"android\",\"web platform\",\"backend\",\n  \"crm\",\"prototype\",\"technical partner\",\"development partner\",\"outsourc\",\"outsourcing\",\n  \"custom software\",\"build product\",\"product team\"\n];\n\nconst itemsOut = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const input = items[i].json || {};\n  // common text fields to inspect\n  const postText = (input.text || input.post_text || input.body || \"\").toString();\n  const authorName = (input.author && input.author.name) ? input.author.name : (input.author_name || \"\");\n  const authorHeadline = (input.author && input.author.headline) ? input.author.headline : (input.author_headline || \"\");\n  const activityId = input.activity_id || input.activityId || input.id || \"\";\n  const postUrl = input.post_url || input.postUrl || input.url || \"\";\n  const postedAt = (input.posted_at && input.posted_at.date) ? input.posted_at.date : (input.posted_at || input.postedAt || \"\");\n  const contentType = (input.content && input.content.type) ? input.content.type : (input.content_type || \"\");\n\n  // exclusion check (explicit hiring/job posts => exclude)\n  const isExplicitHiring = containsAny(postText + \" \" + authorHeadline, excludeKeywords);\n\n  // positive intent checks\n  const posMatches = uniqueMatches(postText + \" \" + authorHeadline, positiveKeywords);\n  const posCount = posMatches.length;\n\n  // scoring (0-10). Basic heuristic:\n  // each positive keyword = +2 points; presence of \"technical partner\"/\"development partner\" = +1 bonus.\n  // cap at 10. But if explicit hiring -> score 0 and exclude (per rules).\n  let score = 0;\n  if (!isExplicitHiring) {\n    score = Math.min(10, posCount * 2);\n    if (/technical partner|development partner/.test((postText + \" \" + authorHeadline).toLowerCase())) {\n      score = Math.min(10, score + 1);\n    }\n    // small boost if author headline mentions \"Founder\" or \"CEO\" (decision maker)\n    if (/(founder|ceo|co-founder|owner)/i.test(authorHeadline)) score = Math.min(10, score + 1);\n  } else {\n    score = 0;\n  }\n\n  // bucket mapping\n  let bucket = \"low\";\n  if (isExplicitHiring) bucket = \"exclude\";\n  else if (score >= 8) bucket = \"high\";\n  else if (score >=5) bucket = \"medium\";\n  else if (score >=1) bucket = \"low\";\n  else bucket = \"low\";\n\n  // confidence 0.0-1.0: depends on number of signals and whether explicit exclude\n  let confidence = isExplicitHiring ? 0.99 : Math.min(0.95, 0.4 + posCount * 0.15);\n  if (posCount === 0) confidence = 0.45;\n\n  // reason summary\n  const reasonParts = [];\n  if (isExplicitHiring) reasonParts.push(\"Explicit job/hiring language found\");\n  if (posCount > 0) reasonParts.push(\"Matched intent keywords: \" + posMatches.join(\", \"));\n  if (authorHeadline) reasonParts.push(\"Author headline: \" + authorHeadline);\n  const reason = reasonParts.join(\" · \") || \"No clear intent keywords found\";\n\n  // short DM / email subject / snippet (only when keep=true)\n  const keep = !isExplicitHiring && score > 0;\n  let short_dm = null;\n  let email_subject = null;\n  let email_snippet = null;\n  if (keep) {\n    const leadPhrase = posMatches.slice(0,2).join(\" / \") || \"your project\";\n    const nm = authorName ? authorName.split(\" \")[0] : \"there\";\n    short_dm = `Hi ${nm}, spotted your post about ${leadPhrase}. We build custom mobile & web products — can we connect for a quick 10-min chat?`;\n    if (short_dm.length > 200) short_dm = short_dm.slice(0,197) + \"...\";\n    email_subject = `Quick help with ${posMatches[0] || \"your project\"}`;\n    email_snippet = `Hi ${authorName || \"\"}, I saw your post about ${posMatches[0] || \"building a product\"}. We build MVPs, mobile apps and integrations — can we schedule a 10-min call to discuss?`;\n  }\n\n  // Build final JSON object (exact schema)\n  const leadJson = {\n    activity_id: activityId || \"\",\n    keep: keep,\n    score: score,\n    bucket: bucket,\n    confidence: Number(confidence.toFixed(2)),\n    reason: reason,\n    short_dm: keep ? short_dm : null,\n    email_subject: keep ? email_subject : null,\n    email_snippet: keep ? email_snippet : null,\n    explain: (!keep && !isExplicitHiring && posCount === 0) ? \"Insufficient intent signals in post text/headline.\" : null\n  };\n\n  // Place it on item.json.lead (or replace item.json if you prefer)\n  itemsOut.push({ json: { lead: leadJson, source: { activity_id: activityId, post_url: postUrl, posted_at: postedAt, content_type: contentType, post_text: postText, author_name: authorName, author_headline: authorHeadline } }});\n}\n\nreturn itemsOut;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -320
+      ],
+      "id": "bb9526a0-bd90-4c5f-bac4-6b8143e4dc15",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9838f7ff-50f9-48a2-baba-40fd462b9dfe",
+              "leftValue": "={{ $json.lead.keep }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        -512
+      ],
+      "id": "1295a073-08ea-498e-ac7c-a146b8056962",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "10099",
+          "mode": "list",
+          "cachedResultName": "Lead Tracking"
+        },
+        "issueType": {
+          "__rl": true,
+          "value": "10133",
+          "mode": "list",
+          "cachedResultName": "Hot Lead"
+        },
+        "summary": "=Lead: {{$json[\"source\"][\"author_name\"]}}",
+        "additionalFields": {
+          "assignee": {
+            "__rl": true,
+            "value": "712020:cf5817f2-257f-48ff-8be8-b8a9c6c9ad55",
+            "mode": "list",
+            "cachedResultName": "Gurinder Singh"
+          },
+          "description": "=New LinkedIn lead detected.\n\nPost: {{$json[\"source\"][\"post_url\"]}}\nAuthor: {{$json[\"source\"][\"author_name\"]}}\nHeadline: {{$json[\"source\"][\"author_headline\"]}}\n\nShort DM: {{$json[\"lead\"][\"short_dm\"]}}\nEmail Subject: {{$json[\"lead\"][\"email_subject\"]}}\nEmail Snippet: {{$json[\"lead\"][\"email_snippet\"]}}"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -512
+      ],
+      "id": "a14b4fa3-b014-4838-829b-4dd88d03dc53",
+      "name": "Create an issue1",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "oZZyPs7e1FskARVa",
+          "name": "Jira SW Business"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C098NRT1CQ3",
+          "mode": "list",
+          "cachedResultName": "business-development"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "name": "Slack Post",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        864,
+        -512
+      ],
+      "id": "c452fc18-b933-43d9-80f4-1bd3c00c4641",
+      "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Clousor N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const issues = items.map(i => i.json);\n\nif (!issues || issues.length === 0) {\n  return [{ json: { text: 'No tickets created.' } }];\n}\n\nconst lines = issues.map(issue => {\n  // if the API returns full 'self' URL but not 'key', prefer key; fallback to parsing self\n  const key = issue.key || (issue.self ? issue.self.split('/').pop() : 'UNKNOWN');\n  const browseUrl = `https://clousor-business.atlassian.net/browse/${key}`;\n  return `• ${key} → ${browseUrl}`;\n}).join('\\n');\n\nconst text = `🎯 *New Lead Tickets Created in Jira*\\n\\n${lines}\\n\\n_Check the details in Jira for outreach drafts & lead info._`;\n\nreturn [{ json: { text } }];"
+      },
+      "id": "eb96d5f3-df2c-4680-a134-bd3b5e03f59b",
+      "name": "Build Slack message",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        -464
+      ],
+      "id": "3e2c4061-5bff-41bc-a72f-5e72cd89ba5e",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Create an issue1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an issue1": {
+      "main": [
+        [
+          {
+            "node": "Build Slack message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slack message": {
+      "main": [
+        [
+          {
+            "node": "Slack Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b9cf61bb-adce-45d8-a318-ade579787596",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-09-13T14:34:17.651Z",
+      "updatedAt": "2025-09-13T14:34:17.651Z",
+      "role": "workflow:owner",
+      "workflowId": "vLvbk0td235cROJB",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
