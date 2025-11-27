@@ -1,0 +1,552 @@
+{
+  "createdAt": "2025-11-21T17:25:11.838Z",
+  "updatedAt": "2025-11-25T16:20:25.000Z",
+  "id": "TN67UOLgDWUg5iWe",
+  "name": "Health Care Offer Message Send",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        -80
+      ],
+      "id": "3d14617c-322b-42d7-99e5-632e53b9b7ef",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and attach full lead details for Marylebone Smile Clinic\nfor (const item of $input.all()) {\n  // Person\n  item.json.salutation = \"Dr.\";\n  item.json.first_name = \"Sahil\";\n  item.json.last_name = \"Patel\";\n  item.json.role = \"Principal Dentist\";\n\n  // Clinic / company\n  item.json.company_name = \"Marylebone Smile Clinic\";\n  item.json.country = \"UK\";\n  item.json.city = \"London\";\n  item.json.website_url = \"https://marylebonesmileclinic.co.uk\";\n\n  // Contact\n  item.json.email = \"info@marylebonesmileclinic.co.uk\";\n  item.json.phone = \"+44 20 7126 8526\";\n  item.json.whatsapp = \"+44 7434 652537\";\n\n  // Social\n  item.json.instagram_handle = \"@marylebonesmileclinicuk\";\n  item.json.instagram_url = \"https://www.instagram.com/marylebonesmileclinicuk\";\n  // If you have these, fill them, otherwise leave as empty strings\n  item.json.linkedin_url = \"\";\n  item.json.company_linkedin_url = \"\";\n  item.json.facebook_url = \"\";\n\n  // Lead sheet specific fields\n  item.json.niche_tag = \"Cosmetic Dentistry\";\n  item.json.main_treatment_focus = \"Porcelain Veneers & Smile Design\";\n  item.json.google_maps_link = \"Link\"; // replace with real Maps URL if you have it\n  item.json.reviews = 180;\n  item.json.rating = 5.0;\n  item.json.why_good_fit = \"High-ticket veneer focus; active social but standard forms.\";\n  item.json.lead_source = \"Instagram\";\n  item.json.personalisation_hook = \"Your 'Smile Design' gallery is stunning; our system can automate the intake for these high-value leads.\";\n\n  // Optional notes for the AI\n  item.json.notes = \"Cosmetic dentistry clinic in London with strong veneer focus and active Instagram.\";\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        16
+      ],
+      "id": "4307d23f-7b3f-4810-874d-fc57b728aef9",
+      "name": "dummy data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/harvestapi~linkedin-profile-posts/run-sync-get-dataset-items",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"includeQuotePosts\": true,\n    \"includeReposts\": true,\n    \"maxComments\": 5,\n    \"maxPosts\": 5,\n    \"maxReactions\": 5,\n    \"scrapeComments\": false,\n    \"scrapeReactions\": false,\n    \"targetUrls\": [\n        \"{{ $json.linkedin_url }}\",\"{{ $json.company_linkedin_url }}\"\n    ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        -128
+      ],
+      "id": "772c4972-ee81-43a3-8509-0b04fd505c8b",
+      "name": "Linkedin Post Scraper",
+      "alwaysOutputData": false,
+      "credentials": {
+        "apifyApi": {
+          "id": "tZcqJ5wSEuakzT87",
+          "name": "Clousor contact.clousor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~instagram-post-scraper/run-sync-get-dataset-items",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"resultsLimit\": 5,\n    \"skipPinnedPosts\": false,\n    \"username\": [\n        \"{{ $json.instagram_url }}\"\n    ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        160
+      ],
+      "id": "0e467748-9767-4e9a-9955-216f5a7666f3",
+      "name": "Instagram Post Scraper",
+      "alwaysOutputData": false,
+      "credentials": {
+        "apifyApi": {
+          "id": "hWYBNfIoczeK6lb3",
+          "name": "Kamal Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.website_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -144,
+        352
+      ],
+      "id": "d0c5c473-367e-4109-84ff-99164802460c",
+      "name": "Website scaper",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('dummy data').item.json.whatsapp }} + {{ $('dummy data').item.json.website_url }} + {{ $('dummy data').item.json.company_name }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1104,
+        240
+      ],
+      "id": "e292c588-20ff-418a-9745-7f207b252bef",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Fetch reference data about Clousor’s Healthcare Patient Acquisition System from Google Sheets.\nThis tool reads all rows from the document “OFFER MASTER SHEET HEALTHCARE” Sheet1 (columns: Section, Key, Value) and returns company details, ICP, offer components, pricing, benefits and messaging.\nCall this tool whenever you need accurate company or offer information before generating any personalised cold email, LinkedIn DM or internal copy.",
+        "documentId": {
+          "__rl": true,
+          "value": "1ahMHdDHgqXSW9t_vHx2sEPKJxApmOUAn8JGCD6n9KyQ",
+          "mode": "list",
+          "cachedResultName": "OFFER MASTER SHEET HEALTHCARE",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ahMHdDHgqXSW9t_vHx2sEPKJxApmOUAn8JGCD6n9KyQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ahMHdDHgqXSW9t_vHx2sEPKJxApmOUAn8JGCD6n9KyQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1232,
+        240
+      ],
+      "id": "87be4b0d-ac3d-4965-9ded-7d8bfb31867f",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json.toon) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "System Prompt – Clousor Healthcare Cold Outreach Engine\n\nYou are Clousor’s Healthcare Cold Outreach Engine.\nYour job is to write high-end, personalised first-touch cold emails and LinkedIn DMs to busy clinic owners and decision makers in the USA, so they book a call or accept a free audit with Clousor Technologies Private Limited.\n\n1. Inputs you will receive\n\nFor each run you get a single JSON object with (at minimum):\n\nlead: one row from the lead sheet, e.g.\n\nfirst_name, last_name, salutation\n\nrole\n\nclinic_name\n\nniche_tag (med_spa, cosmetic_dentist, plastic_surgeon, ortho_pain, etc.)\n\nwebsite_url, city, state, country\n\nemail, linkedin_url, instagram_url\n\nchannel_priority (email / linkedin / instagram)\n\nmain_treatment_focus (e.g. Invisalign, hair transplant, knee replacement)\n\npersonalisation_hint and notes_internal (optional)\n\nanalysis: a cleaned profile of the clinic, typically with keys like:\n\nlead_identity (who they are, where they are)\n\ncompany_summary (what they do, core services, target audience)\n\ndigital_presence (posting frequency, content themes, social proof)\n\ngrowth_and_marketing_insights (what seems to work, gaps, opportunities)\n\npersonalisation_ready_insights (best hooks, tone suggestion, recommended_primary_channel)\n\ncase_studies: optional array of case studies, where each item has:\n\ncase_id\n\nclient_niche, country\n\nengagement_type\n\nstarting_point\n\nwhat_we_did\n\nkey_metrics\n\ntimeframe\n\nquote_or_result_line\n\ncan_use_client_name (\"yes\"/\"no\")\n\nYou also have access to a Google Sheets tool that returns all rows from the company_offer sheet (columns: Section, Key, Value) containing the latest truth about:\n\nClousor’s company description and brand voice\n\nThe “Healthcare Patient Acquisition System” offer\n\nICP and problems solved\n\nThe 4 pillars of the system\n\nPricing ranges and terms\n\nLead magnet offers (Patient Flow Leak Audit, 90-Day Game Plan Call)\n\nBooking link and reply email\n\nAlways call the Google Sheets tool once at the start of each run and treat that data as the single source of truth for Clousor’s offer, pricing, ICP and messaging.\nDo not invent new pricing, guarantees or claims.\n\n2. Your objectives\n\nUnderstand the clinic and context\n\nFrom lead + analysis, infer:\n\nMain niche and treatment focus\n\nLikely priorities (e.g. more self-pay patients, filling schedule, launching new program)\n\nLikely problems (unpredictable demand, weak funnel, lead leakage, no numbers)\n\nUse case_studies to pick one relevant example (same or similar niche if possible).\n\nChoose the right CTA\n\nBased on the situation, choose one primary CTA:\n\nPatient Flow Leak Audit (free Loom/video audit)\n\n90-Day Patient Acquisition Game Plan Call (strategy call)\n\nUse the booking link and reply email from the company sheet where appropriate.\n\nWrite a highly personalised cold email\n\nAudience: clinic owners, medical directors, practice managers in the USA.\n\nLength: 80–130 words.\n\nStyle: professional, clear, calm, no hype, no fluff; focus on outcomes.\n\nMake line 1–2 clearly personalised, using specific details from analysis or lead (treatment focus, city, offer they promote, type of content they post, etc.).\n\nTalk about their outcomes, not your tools: more qualified consults, stable demand, less leakage, clear numbers.\n\nIntroduce Clousor briefly using the company sheet, not a long story.\n\nUse one relevant case study (metrics and outcome). Only name the clinic if can_use_client_name = \"yes\", otherwise refer to it generically (e.g. “an orthopedic clinic”, “a cosmetic dental practice”).\n\nEnd with one low-friction CTA:\n\nEither “Would you be open to a quick 20-minute call?” with booking link\n\nOr “Would you like a short Loom audit of your funnel?” with reply action.\n\nWrite a matching LinkedIn DM\n\nLength: 50–80 words.\n\nMore conversational, but still professional.\n\nReuse the same core idea as the email but shorter.\n\nFirst line again must be personalised and relevant.\n\nCTA: quick game-plan call or free Loom audit, without sounding pushy.\n\nSalutation and tone rules\n\nFor doctors / dentists / surgeons:\n\nUse “Hello Dr. <LastName>” if clearly a medical doctor or dentist.\n\nFor others:\n\nUse “Hello Mr. <LastName>” or “Hello Ms. <LastName>” based on salutation.\n\nIf missing, use “Hello <FirstName>”.\n\nNo fake urgency, no “limited time only” tricks.\n\nAvoid clichés like “I hope this email finds you well” and avoid buzzwords.\n\nDo not reveal scraping\n\nYou may reference what they do or promote (e.g. “your Invisalign focus in Dallas”, “your before-and-after posts”), but do not say things like “I scraped your website” or “I analysed your LinkedIn posts”.\n\nSpeak as someone who has “looked at” their online presence in a normal, human way."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1096,
+        16
+      ],
+      "id": "7d71ec32-2abc-47f5-8c84-194debb30624",
+      "name": "Clousor Healthcare Cold Outreach Engine"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $json.data || \"\";\n\n// remove script and style blocks\nlet text = html\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, \"\")\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, \"\");\n\n// remove all tags\ntext = text.replace(/<[^>]+>/g, \" \");\n\n// collapse spaces\ntext = text.replace(/\\s+/g, \" \").trim();\n\n// keep first 4000 6000 chars for AI so it is not too big\nconst limited = text.slice(0, 30000);\n\nreturn [\n  {\n    json: {\n      page_text: limited\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        352
+      ],
+      "id": "18501a79-bac0-4ffc-b273-d23e116cac26",
+      "name": "Get clean the data webiste"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"meta\": {\n    \"salutation\": \"Hello Dr. Patel\",\n    \"chosen_primary_channel\": \"email\",\n    \"cta_type\": \"loom_audit\",\n    \"cta_link\": \"\",\n    \"chosen_case_study_id\": \"\",\n    \"one_line_personalisation\": \"Short hook\"\n  },\n  \"email\": {\n    \"subject\": \"Subject\",\n    \"body\": \"Body\"\n  },\n  \"linkedin\": {\n    \"connection_note\": \"Note\",\n    \"dm\": \"DM\"\n  }\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1360,
+        240
+      ],
+      "id": "9289b647-ed07-4cb9-a9ae-301207a18b6b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apimaestro~linkedin-profile-detail/run-sync-get-dataset-items",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"includeEmail\": false,\n    \"username\": \"{{ $json.linkedin_url }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        -320
+      ],
+      "id": "4ec870e9-449e-492d-a088-388a564bd355",
+      "name": "Linkedin Profile",
+      "alwaysOutputData": false,
+      "credentials": {
+        "apifyApi": {
+          "id": "tZcqJ5wSEuakzT87",
+          "name": "Clousor contact.clousor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "numberInputs": 5,
+        "output": "empty"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        304,
+        -32
+      ],
+      "id": "179e59e3-1e14-40b8-84a8-7e6f673cc71c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1) Base lead from \"dummy data\"\nconst lead = $items('dummy data', 0, 0).json || {};\n\n// 2) LinkedIn profile (single item)\nlet linkedinProfile = null;\ntry {\n  linkedinProfile = $items('Linkedin Profile', 0, 0).json;\n} catch (e) {}\n\n// 3) LinkedIn posts (multiple items)\nlet linkedinPosts = [];\ntry {\n  linkedinPosts = $items('Linkedin Post Scraper').map(i => i.json);\n} catch (e) {}\n\n// 4) Instagram posts (multiple items)\nlet instagramPosts = [];\ntry {\n  instagramPosts = $items('Instagram Post Scraper').map(i => i.json);\n} catch (e) {}\n\n// 5) Website cleaned text\nlet websiteClean = {};\ntry {\n  websiteClean = $('Get clean the data webiste').first().json.page_text\n} catch (e) {\n  console.log('Website clean error', e);\n}\n\n\n// 6) Final combined JSON\nconst combined = {\n  // put lead fields on top level\n  ...lead,\n\n  // extra blocks grouped\n  linkedin_profile: linkedinProfile,\n  linkedin_posts: linkedinPosts,\n  instagram_posts: instagramPosts,\n  website_page_text: websiteClean || null\n};\n\n// Return ONE item with ONE JSON\nreturn [\n  {\n    json: combined,\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        16
+      ],
+      "id": "9d41db35-e4d2-4b14-b855-e7a0c29d144a",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "inputField": "={{ $json }}",
+        "outputField": "toon"
+      },
+      "type": "@tehw0lf/n8n-nodes-toon.toon",
+      "typeVersion": 1,
+      "position": [
+        752,
+        16
+      ],
+      "id": "2043f371-6cc1-4f06-ae41-ede80102ac4b",
+      "name": "TOON",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        240
+      ],
+      "id": "a75ebc0a-7c5e-42f8-9ad9-3edb656fba4e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "XNOylXtje9ckQrwF",
+          "name": "Main clousor account(not use paid account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        448
+      ],
+      "id": "71a227a4-0a30-4a90-a177-5c8a5f47af3c",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "XNOylXtje9ckQrwF",
+          "name": "Main clousor account(not use paid account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "ff38148a-a656-4117-8765-1b34145a9ae6",
+      "typeVersion": 1.1,
+      "name": "Health Care Cold Dm writer",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -592,
+        112
+      ]
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "dummy data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dummy data": {
+      "main": [
+        [
+          {
+            "node": "Linkedin Post Scraper",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Instagram Post Scraper",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Website scaper",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Linkedin Profile",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Website scaper": {
+      "main": [
+        [
+          {
+            "node": "Get clean the data webiste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin Post Scraper": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Instagram Post Scraper": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Clousor Healthcare Cold Outreach Engine",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Clousor Healthcare Cold Outreach Engine",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clousor Healthcare Cold Outreach Engine": {
+      "main": [
+        []
+      ]
+    },
+    "Get clean the data webiste": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Clousor Healthcare Cold Outreach Engine",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin Profile": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "TOON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TOON": {
+      "main": [
+        [
+          {
+            "node": "Clousor Healthcare Cold Outreach Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Clousor Healthcare Cold Outreach Engine",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health Care Cold Dm writer": {
+      "main": [
+        [
+          {
+            "node": "dummy data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "53b91f99-2856-4444-bf6f-433226b086df",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-11-21T17:25:11.842Z",
+      "updatedAt": "2025-11-21T17:25:11.842Z",
+      "role": "workflow:owner",
+      "workflowId": "TN67UOLgDWUg5iWe",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
