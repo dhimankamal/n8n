@@ -1,0 +1,1446 @@
+{
+  "createdAt": "2025-08-06T16:18:59.262Z",
+  "updatedAt": "2025-09-24T11:17:36.000Z",
+  "id": "4gmQhX6JAef9GbrM",
+  "name": "Whatsapp complaint bot",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "={{'Thank you, ' + $json.data.fullName + '!  \\nYour complaint (C-'+ $json.data.id + ') has been recieved.'}}",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Ticket Reply",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        -928
+      ],
+      "id": "5c03e800-48b3-4c1c-92a4-42bf5da737fe",
+      "webhookId": "ac86c488-bd05-4ce1-8f18-3de7a86ef3fa",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://77f497222def.ngrok-free.app/api/complaint/create",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fullName\": \"{{ $json.name }}\",\n  \"phone\": \"{{ $('WhatsApp Msg').item.json.messages[0].from }}\",\n  \"longitude\": {{ $json.longitude }},\n  \"latitude\": {{ $json.latitude }},\n  \"description\": \"{{ $json.description }}\",\n\"otherNumber\":\"{{ $('Conversation Logic').item.json.phone }}\"\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "name": "HTTP Request Create Complaint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1840,
+        -1024
+      ],
+      "id": "abb31536-7364-411e-b9c9-e842b50b5a22"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.sendToApi}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "IF Send to API?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        -928
+      ],
+      "id": "2332df33-d0e5-40c3-b4ef-f016d0e1b644"
+    },
+    {
+      "parameters": {
+        "functionCode": "try {\n  const incomingMessages = $json && $json.messages ? $json.messages : null;\n  if (!incomingMessages || !incomingMessages.length) {\n    return [];\n  }\n\n  const from = incomingMessages[0].from;\n  const data = this.getWorkflowStaticData(\"global\");\n\n  if (!data[from]) {\n    data[from] = { step: 0 };\n  }\n\n  const state = data[from];\n  const text =\n    incomingMessages[0]?.text && incomingMessages[0]?.text?.body\n      ? incomingMessages[0].text.body.trim()\n      : \"\";\n  let reply;\n\n  // --- HELP KEYWORDS ---\n  const helpKeywords = [\"help\", \"support\", \"assist\", \"how\", \"help me\"];\n  if (helpKeywords.includes(text.toLowerCase())) {\n    const helpMsg = `📋 How to file a complaint:\n                  1. Type the word *complaint* to start.\n                  2. We’ll ask for your Full Name.\n                  3. Your Location (address or area).\n                  4. A brief description of the issue.\n\n                  At any time, you can type *reset* to start over.`;\n    return [{ json: { output: helpMsg, sendToApi: false, from: from } }];\n  }\n\n  // --- RESET FLOW ---\n  if (text.toLowerCase() === \"reset\") {\n    if (data?.[from]) {\n      delete data[from];\n    }\n    reply = \"No problem! Let's start over. Please type *complaint* to begin.\";\n    return [{ json: { output: reply, sendToApi: false, from: from } }];\n  }\n\n\n  switch (state.step) {\n    case 0:\n      if (text.toLowerCase() === 'complaint') {\n        reply = \"Thank you for reaching out! Let's file your complaint.\\nPlease reply with your Full Name (only alphabets and spaces):\";\n        state.step = 1;\n      }  else {\n        reply = \"Hi there! 👋 You can start by typing the word 'complaint'.\\nThis will begin the process to file your issue step-by-step.\";\n      }\n      break;\n\n    case 1: // Name\n      if (!/^[a-zA-Z\\s]+$/.test(text) || text.length < 3) {\n        reply = '❌ Invalid name format.\\n✅ Please enter your Full Name (only alphabets and spaces, at least 3 characters).';\n      } else {\n        state.name = text;\n        reply = '2️⃣ Please enter your Phone Number (10 digits only):';\n        state.step = 2;\n      }\n      break;\n\n    case 2: // Phone\n      if (!/^\\d{10}$/.test(text.replace(/\\s+/g, ''))) {\n        reply = '❌ Invalid phone number.\\n✅ Please enter a 10-digit number without spaces or special characters (e.g., 9876543210).';\n      } else {\n        state.phone = text.replace(/\\s+/g, '');\n        reply = '3️⃣ Please share your Location(from the location share feature.) or send *NA* if you don\\'t wanna share your location:';\n        state.step = 3;\n      }\n      break;\n\n    case 3: // Location'\n       if(incomingMessages[0].type==\"text\" && text===\"NA\"){\n          reply = '4️⃣ Please describe the issue (5–500 characters):';\n          state.latitude = 0;\n        state.longitude = 0;\n        state.step = 4;\n\n      }else if(incomingMessages[0].type!==\"location\"){\n         reply = '❌ Invalid location.\\n✅ Please share the location via location share feature of Whatsapp or send *NA* if you don\\'t wanna share your location.';\n      }else {\n\n       const latitude = incomingMessages[0].location.latitude\n        const longitude = incomingMessages[0].location.longitude\n        state.latitude = latitude;\n        state.longitude = longitude;\n        reply = '4️⃣ Please describe the issue (5–500 characters):';\n        state.step = 4;\n      }\n      break;\n\n    case 4: // Issue\n      if (text.length < 5 || text.length > 500) {\n        reply = '❌ Invalid description.\\n✅ Please provide a brief description of the issue (between 5 and 500 characters).';\n      } else {\n        state.issue = text;\n        state.step = 0;\n        return [{\n          json: {\n            sendToApi: true,\n            name: state.name,\n            phone: state.phone,\n            latitude:state.latitude,\n            longitude: state.longitude,\n            description: state.issue,\n            from: from\n          }\n        }];\n      }\n      break;\n\n    default:\n      state.step = 0;\n      reply = \"I'm sorry, something went wrong. Let's start over. Please type 'complaint' to begin.\";\n      break;\n  }\n  \n\n  return [{ json: { output: reply, sendToApi: false, from: from } }];\n} catch (error) {\n  console.log(\"error\",error.message)\n  const from =\n    $json && $json.messages && $json.messages[0]\n      ? $json.messages[0].from\n      : null;\n  const reply = \"Sorry, an unexpected error occurred. Please try again later.\";\n  return [{ json: { output: reply, sendToApi: false, from: from } }];\n}\n"
+      },
+      "name": "Conversation Logic",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        -928
+      ],
+      "id": "7a36bdd7-0ef3-400d-8e88-68a1cd136e82"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "name": "WhatsApp Msg",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        -416
+      ],
+      "id": "5438102d-4822-49bb-b3ad-516dce308ae0",
+      "webhookId": "fb682d89-3c84-457a-8856-22dc869e1e67",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "xrA71QVvLSRL9BKe",
+          "name": "WhatsApp OAuth account MEM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "={{$json.output}}",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Reply (Mid-Step)",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        -832
+      ],
+      "id": "49b70f8e-edaf-4f00-8926-5216c4b6f78b",
+      "webhookId": "f6fd4592-17c3-48bb-ad2e-02769a4f0355",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "complaint-closed",
+        "options": {}
+      },
+      "id": "ffbf5992-896f-4d4a-b2c7-e909cf4f3dfe",
+      "name": "Webhook Trigger - Complaint Closed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        1248
+      ],
+      "webhookId": "14086329-742d-4084-bce2-f4786b251ba1"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.user.phone }}",
+        "textBody": "=Thank you! \nComplaint {{ $json.body.complaintId }} is now Closed. We appreciate your trust in us. ",
+        "additionalFields": {}
+      },
+      "name": "Send to User",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        1152
+      ],
+      "id": "2edff1b8-5f4b-47ed-a1ee-b8e07cc7c758",
+      "webhookId": "da963849-8450-49b5-a981-61c4c5eb69f9",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.teamMember.phone }}",
+        "textBody": "=Complaint {{ $json.body.complaintId }} successfully closed. ",
+        "additionalFields": {}
+      },
+      "name": "Send to Team Member",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        1344
+      ],
+      "id": "a018c143-da69-43c6-99fd-9fbd78f4e875",
+      "webhookId": "22e03e55-c429-4cb6-966b-4a6a79f76730",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "/complaint-otp-message\nRequest OTP for marking the complaint resolved.",
+        "height": 240,
+        "width": 1420,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2832,
+        848
+      ],
+      "id": "88261d06-4fa7-4509-a33b-c9f359a35114",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "/complaint-closed\nWhen complaint is closed  by the admin/subadmin.",
+        "height": 420,
+        "width": 1420,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2832,
+        1088
+      ],
+      "id": "8f09623f-c076-4db6-a27e-e8877b12d1a7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "/change-assignment\nWhen complaint is assigned to another team member",
+        "height": 600,
+        "width": 1400,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2608,
+        -160
+      ],
+      "id": "916796c1-0c60-4573-83c7-dd3505b741f7",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.assignedTeamMember.phone }}",
+        "textBody": "=New Complaint Assigned: *{{ $json.body.complaintId }}* \nDate/Time: *{{ $json.body.dateTime }}*  \nClient: *{{ $json.body.customer.name }}* \nContact: *{{ $json.body.customer.otherNumber }}*\nWhatsapp: *{{ $json.body.customer.phone }}*\nIssue: {{ $json.body.issue }}\n\n\n{{ $json.body.latitude === 0 || $json.body.longitude===0 ? \"\":\"*Please find the location details below*\"}}\n",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp to Team Member",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        512
+      ],
+      "id": "3da5516d-a582-4dbb-97eb-dd35e8663c75",
+      "webhookId": "1481d428-2bb8-4676-949c-391dd501e479",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.customer.phone }}",
+        "textBody": "=Dear {{ $json.body.customer.name }}, {{ \"\\n\" }}\nYour complaint (ID: {{ $json.body.complaintId }}) has been assigned to our technician *{{ $json.body.assignedTeamMember.name }} ({{ $json.body.assignedTeamMember.phone }})*. They will contact you shortly at {{ $json.body.customer.otherNumber }} to schedule a visit. {{ \"\\n\" }}\nThank you,",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp to User",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        704
+      ],
+      "id": "bbf7c962-bcca-4fee-b750-3aa7424d4652",
+      "webhookId": "7b259c1b-fa54-4f9d-93ff-050845e537ee",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team-member-message",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Webhook Trigger - Complaint Register1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        608
+      ],
+      "id": "bb42fa75-5813-49c9-bd46-801bdcf8044f",
+      "webhookId": "25e42c5e-4f5a-440e-aec3-25a9bc322156"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "change-assignment",
+        "options": {}
+      },
+      "name": "Webhook Trigger - Change Assignment",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        96
+      ],
+      "webhookId": "change-assignment-hook",
+      "id": "21441d57-900a-4dbf-bae0-9d31d518a472"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.oldTeamMember.phone }}",
+        "textBody": "=Hello {{ $json.body.oldTeamMember.name }},\nComplaint {{ $json.body.complaintId }} has been assigned to another technician. You are no longer assigned to this job.",
+        "additionalFields": {}
+      },
+      "name": "Notify Old Team Member",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        -96
+      ],
+      "id": "75960abd-17d0-480e-9c91-9e450493490f",
+      "webhookId": "b73c798a-1c78-4379-8965-890339b02522",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.newTeamMember.phone }}",
+        "textBody": "=New Complaint Assigned: *{{ $json.body.complaintId }}*\nDate/Time: *{{ $json.body.dateTime }}*  \nClient: *{{ $json.body.customer.name }}* \nContact: *{{ $json.body.customer.otherNumber }}*\nWahtsapp: *{{ $json.body.customer.phone }}*\nIssue: {{ $json.body.issue }}\n\n{{ $json.body.latitude === 0 || $json.body.longitude===0 ? \"\":\"*Please find the location details below*\"}}\n",
+        "additionalFields": {}
+      },
+      "name": "Notify New Team Member",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        96
+      ],
+      "id": "ffa82c90-9d3e-4307-9f8c-7d340d3748cb",
+      "webhookId": "b30e0870-d8a0-46d2-9805-812d5298b64a",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.customer.phone }}",
+        "textBody": "=A new technician *{{ $json.body.newTeamMember.name }}({{ $json.body.newTeamMember.phone }})* has been assigned to your complaint {{ $json.body.complaintId }}\nHe will be contacting you soon on {{ $json.body.customer.otherNumber }}.",
+        "additionalFields": {}
+      },
+      "name": "Notify User",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        288
+      ],
+      "id": "45890fc0-6673-4800-a2be-f9e500cb4a5d",
+      "webhookId": "08eabd20-fc23-47f6-b1aa-346e5f32b0af",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.phone }}",
+        "textBody": "=Your complaint *{{ $json.body.complaintId }}* is marked as Resolved.  \nPlease share this OTP with the Team member: *{{ $json.body.otp }}*",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Send OTP",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        928
+      ],
+      "id": "f3763d91-e5ba-4161-9ca1-82512554ceab",
+      "webhookId": "0e1433cd-ed50-4ed0-837e-6d1fd3be4dcd",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "complaint-otp-message",
+        "options": {}
+      },
+      "id": "d655b19c-93e3-41e8-8a18-28502e25d8da",
+      "name": "Webhook Trigger - OTP1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        928
+      ],
+      "webhookId": "3fcc4d18-f287-498a-8cc6-64e7fd139c5d"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "=We are experiencing some internal server error while registering your complaint. Please reach out to our help desk.\n\nThank you!",
+        "additionalFields": {
+          "previewUrl": false
+        }
+      },
+      "name": "WhatsApp Ticket Reply1",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        -1120
+      ],
+      "id": "e0d40d83-cbd8-4349-ad38-bdeb9fc349b7",
+      "webhookId": "ac86c488-bd05-4ce1-8f18-3de7a86ef3fa",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cf023556-aa9f-4408-b7ab-f3b0816e0be6",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1616,
+        -1024
+      ],
+      "id": "c90aeaf2-0af7-4e5e-940e-d13b49a4b099",
+      "name": "Detect Error"
+    },
+    {
+      "parameters": {
+        "content": "/team-member-message\nWhen complaint is assigned to a team member.",
+        "height": 400,
+        "width": 1420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2608,
+        464
+      ],
+      "id": "55c4f45f-1dac-496f-917a-a9be3b38d500",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.assignedTeamMember.phone }}",
+        "messageType": "location",
+        "longitude": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.longitude }}",
+        "latitude": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.latitude }}"
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        512
+      ],
+      "id": "2b5f12bc-14f6-4a56-b04c-2c73d4474df7",
+      "name": "WhatsApp Business Cloud",
+      "webhookId": "7da8321b-c6a8-4d6c-ab29-ef932cd4bc03",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $('Webhook Trigger - Change Assignment').item.json.body.newTeamMember.phone }}",
+        "messageType": "location",
+        "longitude": "={{ $('Webhook Trigger - Change Assignment').item.json.body.longitude }}",
+        "latitude": "={{ $('Webhook Trigger - Change Assignment').item.json.body.latitude }}"
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        96
+      ],
+      "id": "881f1789-fdaa-4d17-98cd-de45929c65b3",
+      "name": "WhatsApp Business Cloud1",
+      "webhookId": "7da8321b-c6a8-4d6c-ab29-ef932cd4bc03",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "/complaint-resolved\nWhen complaint is resolved by the team member.",
+        "height": 420,
+        "width": 1420,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2832,
+        1504
+      ],
+      "id": "028a0af5-44f0-444f-96e7-48740d94ecd8",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.user.phone }}",
+        "textBody": "=Thank you! \nComplaint {{ $json.body.complaintId }} is now Resolved. We appreciate your trust in us. \n",
+        "additionalFields": {}
+      },
+      "name": "Send to customer",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        1568
+      ],
+      "id": "bbd5fc2c-3d64-487b-bf50-72c6396cdbd9",
+      "webhookId": "da963849-8450-49b5-a981-61c4c5eb69f9",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.body.teamMember.phone }}",
+        "textBody": "=Complaint {{ $json.body.complaintId }} successfully resolved. ",
+        "additionalFields": {}
+      },
+      "name": "Send to tasker",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        1760
+      ],
+      "id": "449de62a-cf6a-4cdf-8218-a93cba8022f5",
+      "webhookId": "22e03e55-c429-4cb6-966b-4a6a79f76730",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "complaint-resolved",
+        "options": {}
+      },
+      "id": "f6e4b769-727f-413d-8b29-46e514d62b48",
+      "name": "Webhook Trigger - Complaint resolved",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        1664
+      ],
+      "webhookId": "14086329-742d-4084-bce2-f4786b251ba1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fdd2bacd-9425-48b8-877b-e15a36c596da",
+              "leftValue": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.longitude }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "d2e7a4fb-2fc5-4453-8c62-934619b4a3ad",
+              "leftValue": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.longitude }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1840,
+        512
+      ],
+      "id": "c2694fbf-371e-4338-aad5-7bd8dd92c5d8",
+      "name": "If",
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $json.messages[0].from }}",
+        "template": "complaint_register_flow_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "type": "button",
+              "sub_type": "=flow",
+              "buttonParameters": {
+                "parameter": {
+                  "type": "text",
+                  "text": "{}"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        -320
+      ],
+      "id": "5c500f4f-a784-402f-9a20-d448944dd5b3",
+      "name": "Send template",
+      "webhookId": "bef1c2a1-c0d1-40bd-80f2-2f79e2a15029",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lexium-chat-bot.vercel.app/api/complaint/create",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fullName",
+              "value": "={{ $json.payload.fullName }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.payload.phone }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ $json.payload.longitude }}"
+            },
+            {
+              "name": "latitude",
+              "value": "={{ $json.payload.latitude }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.payload.description }}"
+            },
+            {
+              "name": "otherNumber",
+              "value": "={{ $json.payload.otherNumber }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "name": "HTTP Request Create Complaint1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1392,
+        -512
+      ],
+      "id": "f787d84e-fe7a-4322-b1e6-e0159486fc87"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b3124181-9d3e-4a0c-b721-ceaa0783ba72",
+              "leftValue": "={{ $json.messages[0].type }}",
+              "rightValue": "interactive",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2064,
+        -416
+      ],
+      "id": "1b03963f-78a0-4fab-81cc-52ad62cf8945",
+      "name": "IF(form submitted)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jsonData  = JSON.parse($input.first().json.messages[0].interactive.nfm_reply.response_json)\n\nreturn jsonData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1840,
+        -512
+      ],
+      "id": "e313795f-4a2d-45ae-8d8b-b4341ee97295",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cf023556-aa9f-4408-b7ab-f3b0816e0be6",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1168,
+        -512
+      ],
+      "id": "77279d3d-3e4e-4654-9b81-e91ffc9e7670",
+      "name": "Detect Error1"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "=We are experiencing some internal server error while registering your complaint. Please reach out to our help desk.\n\nThank you!",
+        "additionalFields": {
+          "previewUrl": false
+        }
+      },
+      "name": "WhatsApp Ticket Reply2",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        -608
+      ],
+      "id": "ba1d9cb8-a311-4f53-b33e-d84683215b3a",
+      "webhookId": "ac86c488-bd05-4ce1-8f18-3de7a86ef3fa",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "={{'Thank you, ' + $json.data.fullName + '!  \\nYour complaint (C-'+ $json.data.id + ') has been recieved.'}}",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Ticket Reply3",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        -416
+      ],
+      "id": "01d1e806-a7d8-4472-9254-30fcbdbdac72",
+      "webhookId": "ac86c488-bd05-4ce1-8f18-3de7a86ef3fa",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\n\nif($input.first().json.screen_0_Registering_as_broker__0){\n  if($input.first().json.screen_0_Whastapp_Number_3===\"\"){\n    return { payload:{\n  \"fullName\": $input.first().json.screen_0_Full_Name_1,\n  \"phone\": $('WhatsApp Msg').first().json.contacts[0].wa_id,\n  \"longitude\":0,\n  \"latitude\":0,\n  \"description\": $input.first().json.screen_0_Description_4,\n\"otherNumber\": $input.first().json.screen_0_Calling_Number_2\n    }\n}\n  }\n  return {\n    payload:{\n  \"fullName\": $input.first().json.screen_0_Full_Name_1,\n  \"phone\": $input.first().json.screen_0_Whastapp_Number_3,\n  \"longitude\":0,\n  \"latitude\":0,\n  \"description\": $input.first().json.screen_0_Description_4,\n\"otherNumber\": $input.first().json.screen_0_Calling_Number_2\n    }\n}\n\n}else{\n    return {\n      payload:{\n  \"fullName\": $input.first().json.screen_0_Full_Name_1,\n  \"phone\": \"$('WhatsApp Msg').first().json.contacts[0].wa_id\",\n  \"longitude\":0,\n  \"latitude\":0,\n  \"description\": $input.first().json.screen_0_Description_4,\n\"otherNumber\": $input.first().json.screen_0_Calling_Number_2\n      }\n}\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1616,
+        -512
+      ],
+      "id": "32071128-4190-4c40-ad23-4873dd967827",
+      "name": "Create API Payload"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fdd2bacd-9425-48b8-877b-e15a36c596da",
+              "leftValue": "={{ $('Webhook Trigger - Change Assignment').item.json.body.latitude }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "d2e7a4fb-2fc5-4453-8c62-934619b4a3ad",
+              "leftValue": "={{ $('Webhook Trigger - Change Assignment').item.json.body.longitude }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1840,
+        96
+      ],
+      "id": "7f97fd6d-2f1b-442e-aa4b-de165297d68e",
+      "name": "If1",
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "WhatsApp Ticket Reply": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request Create Complaint": {
+      "main": [
+        [
+          {
+            "node": "Detect Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Send to API?": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Create Complaint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Reply (Mid-Step)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Logic": {
+      "main": [
+        [
+          {
+            "node": "IF Send to API?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Msg": {
+      "main": [
+        [
+          {
+            "node": "IF(form submitted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger - Complaint Closed": {
+      "main": [
+        [
+          {
+            "node": "Send to User",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to Team Member",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger - Complaint Register1": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp to Team Member",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "WhatsApp to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger - Change Assignment": {
+      "main": [
+        [
+          {
+            "node": "Notify Old Team Member",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify New Team Member",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger - OTP1": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Send OTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Error": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Ticket Reply1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Ticket Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Ticket Reply1": {
+      "main": [
+        []
+      ]
+    },
+    "WhatsApp to Team Member": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify New Team Member": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger - Complaint resolved": {
+      "main": [
+        [
+          {
+            "node": "Send to customer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to tasker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Business Cloud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF(form submitted)": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Create Complaint1": {
+      "main": [
+        [
+          {
+            "node": "Detect Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Create API Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Error1": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Ticket Reply2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Ticket Reply3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create API Payload": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Create Complaint1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Business Cloud1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "global": {
+      "919914817311": {
+        "step": 0,
+        "name": "Khushal singh",
+        "phone": "9876543210",
+        "location": "Patiala",
+        "issue": "My ac is not working"
+      },
+      "919781452072": {
+        "step": 0,
+        "name": "Tarn",
+        "phone": "9988545422",
+        "latitude": 30.422588348389,
+        "longitude": 76.287666320801,
+        "issue": "Testttinggg"
+      },
+      "917502100055": {
+        "step": 0,
+        "name": "Bunty dhillon",
+        "phone": "7502100055",
+        "latitude": 30.19693639,
+        "longitude": 74.65852996,
+        "issue": "Geyser problem"
+      },
+      "919915668595": {
+        "step": 0,
+        "name": "veer singh",
+        "phone": "9914461551",
+        "latitude": 0,
+        "longitude": 0,
+        "issue": "hjkkid"
+      }
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook Trigger - Complaint Register1": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.clourax.com",
+            "content-length": "254",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "br, gzip, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "complaintId": "C-1014",
+            "latitude": 30.700588,
+            "longitude": 76.6734462,
+            "dateTime": "2025-09-16 10:30",
+            "issue": "ghjjjjfg",
+            "customer": {
+              "name": "veer",
+              "phone": "919915668595",
+              "otherNumber": "9914471661"
+            },
+            "assignedTeamMember": {
+              "name": "Veer",
+              "phone": "919915668595"
+            }
+          },
+          "webhookUrl": "https://n8n.clourax.com/webhook/team-member-message",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Webhook Trigger - Change Assignment": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.clourax.com",
+            "content-length": "306",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "br, gzip, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "complaintId": "C-1024",
+            "latitude": 0,
+            "longitude": 0,
+            "dateTime": "2025-09-16 13:27",
+            "issue": "bhd dbd dbd bd dbd db d",
+            "customer": {
+              "name": "veer",
+              "phone": "99773828838",
+              "otherNumber": "9914471661"
+            },
+            "oldTeamMember": {
+              "name": "Veer",
+              "phone": "919915668595"
+            },
+            "newTeamMember": {
+              "name": "Team test",
+              "phone": "919915668595"
+            }
+          },
+          "webhookUrl": "https://n8n.clourax.com/webhook/change-assignment",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "WhatsApp Msg": [
+      {
+        "json": {
+          "messaging_product": "whatsapp",
+          "metadata": {
+            "display_phone_number": "15551391826",
+            "phone_number_id": "505140649353735"
+          },
+          "contacts": [
+            {
+              "profile": {
+                "name": "Mahvi"
+              },
+              "wa_id": "919915668595"
+            }
+          ],
+          "messages": [
+            {
+              "context": {
+                "from": "15551391826",
+                "id": "wamid.HBgMOTE5OTE1NjY4NTk1FQIAERgSRTU1MDg5NUY2MTEyRjE4RTI2AA=="
+              },
+              "from": "919915668595",
+              "id": "wamid.HBgMOTE5OTE1NjY4NTk1FQIAEhggQUNEQjVBQUQwQjU0RTA0QjM4QTREMzYwODcxRUY3NTYA",
+              "timestamp": "1758620170",
+              "type": "interactive",
+              "interactive": {
+                "type": "nfm_reply",
+                "nfm_reply": {
+                  "response_json": "{\"screen_0_Registering_as_broker__0\":true,\"screen_0_Full_Name_1\":\"Veer\",\"screen_0_Calling_Number_2\":\"9914471661\",\"screen_0_Whastapp_Number_3\":\"\",\"screen_0_Description_4\":\"lorem ipsum \",\"flow_token\":\"unused\"}",
+                  "body": "Sent",
+                  "name": "flow"
+                }
+              }
+            }
+          ],
+          "field": "messages"
+        }
+      }
+    ]
+  },
+  "versionId": "9fddd522-23b0-4e9f-b58b-5ca3e74e782a",
+  "triggerCount": 6,
+  "shared": [
+    {
+      "createdAt": "2025-08-06T16:18:59.271Z",
+      "updatedAt": "2025-08-06T16:18:59.271Z",
+      "role": "workflow:owner",
+      "workflowId": "4gmQhX6JAef9GbrM",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
