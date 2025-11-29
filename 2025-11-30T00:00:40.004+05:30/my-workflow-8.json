@@ -1,0 +1,74 @@
+{
+  "createdAt": "2025-09-08T17:31:49.336Z",
+  "updatedAt": "2025-09-08T17:31:49.336Z",
+  "id": "xddH7Tn1RRP0EwPl",
+  "name": "My workflow 8",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "023720a5-aac2-4847-a191-9958909ffdfe",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getProfile",
+        "user": "hr-clousor"
+      },
+      "type": "n8n-nodes-hdw.hdwLinkedin",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "506e617b-8dca-4431-a186-dfa4a7a5c48c",
+      "name": "Get linked in user profile",
+      "credentials": {
+        "hdwLinkedinApi": {
+          "id": "vIoNcpvRMVudcLYV",
+          "name": "HDW LinkedIn account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get linked in user profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9fa22928-0c60-413e-a995-11ede316a2f0",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-09-08T17:31:49.343Z",
+      "updatedAt": "2025-09-08T17:31:49.343Z",
+      "role": "workflow:owner",
+      "workflowId": "xddH7Tn1RRP0EwPl",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
