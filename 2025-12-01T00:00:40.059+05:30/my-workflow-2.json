@@ -1,0 +1,128 @@
+{
+  "createdAt": "2025-04-07T14:07:52.173Z",
+  "updatedAt": "2025-08-27T08:05:35.000Z",
+  "id": "fHCJK6DhowMrSpw6",
+  "name": "My workflow 2",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get-instagram-metrics",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "9c02c2cc-23b4-4746-90a9-cd63f430a777",
+      "webhookId": "33995b4e-8538-4eb3-b91d-bedbfbdaf1a5"
+    },
+    {
+      "parameters": {
+        "authentication": "queryAuth",
+        "url": "https://graph.instagram.com/me?fields=followers_count,media_count",
+        "options": {}
+      },
+      "name": "HTTP Request - Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        420,
+        0
+      ],
+      "id": "0dabb0a5-094e-4ee8-968b-4d5241bef6c4",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "24mEOvg1DYeH7IKF",
+          "name": "Query Auth account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reportDate",
+              "value": "March 2025"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Report Info",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        620,
+        0
+      ],
+      "id": "f9aa5889-2637-4c14-9ef4-85b8d14d69d6"
+    },
+    {
+      "parameters": {
+        "path": "d997e547-5ff1-4d47-9014-ffb8e97c2a4c",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        820,
+        0
+      ],
+      "id": "0c7364ad-9d13-4d46-8fab-7ed251c45a71",
+      "webhookId": "d997e547-5ff1-4d47-9014-ffb8e97c2a4c"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Instagram": {
+      "main": [
+        [
+          {
+            "node": "Set Report Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f60f0c55-a411-4da7-85ef-76a790366ef8",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-04-07T14:07:52.179Z",
+      "updatedAt": "2025-04-07T14:07:52.179Z",
+      "role": "workflow:owner",
+      "workflowId": "fHCJK6DhowMrSpw6",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
