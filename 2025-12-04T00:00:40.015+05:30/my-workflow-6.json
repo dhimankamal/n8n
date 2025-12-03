@@ -1,0 +1,105 @@
+{
+  "createdAt": "2025-08-08T09:12:10.108Z",
+  "updatedAt": "2025-08-27T08:04:07.000Z",
+  "id": "s34WRvUNiPNC62ka",
+  "name": "My workflow 6",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        -20
+      ],
+      "id": "3ba2ac4c-60e9-469b-b09f-789d0914808c",
+      "webhookId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "+919781452072",
+        "template": "notify_team|en",
+        "components": {
+          "component": [
+            {
+              "type": "={{$json.complaintId}}\n{{$json.name}}\n{{$json.phone}}\n{{$json.location}}\n{{$json.issue}}",
+              "bodyParameters": {},
+              "sub_type": "quick_reply",
+              "index": 0,
+              "buttonParameters": {},
+              "headerParameters": {}
+            }
+          ]
+        }
+      },
+      "name": "Send Team Notification",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        120,
+        -20
+      ],
+      "id": "c89ec5e8-81f1-4358-8d63-a488f1b46b00",
+      "webhookId": "6590137b-f154-499d-96c8-d947bfabb424",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Team Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Team Notification": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "919914817311": {
+        "step": 2,
+        "name": "Complaint"
+      }
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f794b86d-20af-4104-9e0a-5ae7a71f9ecc",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-08-08T09:12:10.112Z",
+      "updatedAt": "2025-08-08T09:12:10.112Z",
+      "role": "workflow:owner",
+      "workflowId": "s34WRvUNiPNC62ka",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
