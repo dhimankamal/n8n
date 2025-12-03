@@ -1,0 +1,292 @@
+{
+  "createdAt": "2025-09-07T17:07:11.829Z",
+  "updatedAt": "2025-09-08T17:19:17.000Z",
+  "id": "TCHxXycujfqzLDtW",
+  "name": "Loop Facebook ads",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1xY8VC9q7CRrhMrXltjPeyPnOrSFzNaXy2xTI6LUVMo0",
+          "mode": "list",
+          "cachedResultName": "facebook ads account",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xY8VC9q7CRrhMrXltjPeyPnOrSFzNaXy2xTI6LUVMo0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xY8VC9q7CRrhMrXltjPeyPnOrSFzNaXy2xTI6LUVMo0/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -848,
+        24
+      ],
+      "id": "00d7ed6d-f941-4b14-a801-f9ddcf3ab1a1",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -624,
+        24
+      ],
+      "id": "183276a1-5eb3-4ad7-9009-ed573c7e3afb",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v22.0",
+        "node": "=act_{{ $('Get row(s) in sheet').item.json.account_id }}",
+        "edge": "insights",
+        "options": {
+          "queryParametersJson": "={\n  \"fields\": \"campaign_name,impressions,clicks,reach,spend,inline_link_clicks,inline_link_click_ctr,actions\",\n \"date_preset\": \"maximum\",\n  \"level\": \"campaign\",\n  \"limit\": \"500\",\n \"filtering\": [\n    {\n      \"field\": \"campaign.effective_status\",\n      \"operator\": \"IN\",\n      \"value\": [\"ACTIVE\"]\n    }\n  ]\n}"
+        }
+      },
+      "name": "FB: campaign insights",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "d392339a-e839-4cbc-895c-e98848be59d9",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "ZG3cLFLXJjL0Ig1y",
+          "name": "clousor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const rows = $json.data || [];\nif (!Array.isArray(rows)) rows = [];\n\nfunction fmtNum(n) {\n  if (n === null || n === undefined) return '0';\n  return Number(n).toLocaleString('en-IN');\n}\n\nfunction fmtMoney(n) {\n  const num = Number(n || 0);\n  return num.toFixed(2);\n}\n\n// compute CTR for each row and find top CTR\nlet bestIndex = -1;\nlet bestCtr = -1;\nconst items = rows.map((r, idx) => {\n  const name = r.campaign_name || 'Unknown';\n  const spend = r.spend ? Number(r.spend) : 0;\n  const clicks = (r.clicks || r.inline_link_clicks || 0);\n  const impressions = Number(r.impressions || 0);\n  const ctrValue = impressions ? (clicks / impressions) * 100 : 0;\n  const ctr = impressions ? ctrValue.toFixed(2) + '%' : '-';\n\n  if (impressions && ctrValue > bestCtr) {\n    bestCtr = ctrValue;\n    bestIndex = idx;\n  }\n\n  return {\n    name,\n    spend,\n    impressions,\n    ctr,\n    ctrValue\n  };\n});\n\n// build message lines (single-line per campaign)\nlet lines = items.map((it, i) => {\n  const topBadge = (i === bestIndex && bestCtr > 0) ? '' : '';\n  return `• ${it.name}${topBadge}\\n  Spend: ₹${fmtMoney(it.spend)} | Impr: ${fmtNum(it.impressions)} | CTR: ${it.ctr}`;\n});\n\nconst message = lines.length ? lines.join('\\n\\n') : 'No campaigns found.';\n\nreturn [{ json: { message } }];\n"
+      },
+      "name": "Build Slack message",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -48
+      ],
+      "id": "7685264a-ecca-4568-a4ba-c171ad2589d4"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C074ZFL8PDX",
+          "mode": "list",
+          "cachedResultName": "ad-campaign-status"
+        },
+        "text": "=------------------------\n*{{ $('Get row(s) in sheet').item.json.name }} Ads report*\n{{ $('FB ADS BALANCE').item.json.funding_source_details.display_string }}\n{{$json[\"message\"]}}\n------------------------",
+        "otherOptions": {}
+      },
+      "name": "Slack Post",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        272,
+        32
+      ],
+      "id": "ad630961-0b0b-4f34-bc39-e62b6aa3dfab",
+      "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Clousor N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v22.0",
+        "node": "=act_{{ $json.account_id }}",
+        "options": {
+          "queryParametersJson": "={\n  \"fields\": \"balance,amount_spent,spend_cap,funding_source_details\"\n}\n"
+        }
+      },
+      "name": "FB ADS BALANCE",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -48
+      ],
+      "id": "3c07f2fc-35da-4fb9-b274-c2c1a47ccbf2",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "ZG3cLFLXJjL0Ig1y",
+          "name": "clousor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5c308a82-3de1-4f74-a6f5-2cca389c1cc4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1088,
+        -112
+      ],
+      "id": "c933b1ae-7c4e-47f0-b295-3cf1dc171260",
+      "name": "Webhook",
+      "webhookId": "5c308a82-3de1-4f74-a6f5-2cca389c1cc4"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1088,
+        160
+      ],
+      "id": "77472165-ae4a-43a4-85df-43beb57642da",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "FB ADS BALANCE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FB: campaign insights": {
+      "main": [
+        [
+          {
+            "node": "Build Slack message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slack message": {
+      "main": [
+        [
+          {
+            "node": "Slack Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Post": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FB ADS BALANCE": {
+      "main": [
+        [
+          {
+            "node": "FB: campaign insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "3c718cb2-82ba-495a-8c76-fe2043116c36",
+  "triggerCount": 2,
+  "shared": [
+    {
+      "createdAt": "2025-09-07T17:07:11.834Z",
+      "updatedAt": "2025-09-07T17:07:11.834Z",
+      "role": "workflow:owner",
+      "workflowId": "TCHxXycujfqzLDtW",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
