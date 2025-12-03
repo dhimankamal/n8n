@@ -1,0 +1,585 @@
+{
+  "createdAt": "2025-12-03T04:26:19.100Z",
+  "updatedAt": "2025-12-03T16:38:42.000Z",
+  "id": "eHsqOyreGKKbQblu",
+  "name": "Email Sender Health Care Industry",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -64
+      ],
+      "id": "d622c35f-6fbb-4a69-ae67-c5eb0ac1cee8",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ahMHdDHgqXSW9t_vHx2sEPKJxApmOUAn8JGCD6n9KyQ",
+          "mode": "list",
+          "cachedResultName": "OFFER MASTER SHEET HEALTHCARE",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ahMHdDHgqXSW9t_vHx2sEPKJxApmOUAn8JGCD6n9KyQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1716830802,
+          "mode": "list",
+          "cachedResultName": "tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ahMHdDHgqXSW9t_vHx2sEPKJxApmOUAn8JGCD6n9KyQ/edit#gid=1716830802"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -224,
+        -128
+      ],
+      "id": "6334b9bc-eec7-487c-957f-ad00773ba203",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0af06640-ffaf-4d52-8472-25cb0c1eb332",
+              "leftValue": "={{$json[\"email send\"] || false}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        -128
+      ],
+      "id": "0780397f-fd53-4d36-97fb-e9d8b12317fe",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        -128
+      ],
+      "id": "d2d37bb1-5590-4895-bfe1-3a8a233a1c5e",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        -272
+      ],
+      "id": "b9cb060a-7f7c-41cc-ab11-70549f2dbecd",
+      "name": "Wait",
+      "webhookId": "9378c298-88c8-4cca-a173-e60dab639e59"
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -128
+      ],
+      "id": "7d2fb269-960d-44c9-a3e7-0cc91903b1ae",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "fromEmail": "kamal@clousor.in",
+        "toEmail": "={{ $('If1').item.json.Email }}",
+        "subject": "={{ $json.Subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json['Email Body'] }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "kamal@clousor.com"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1568,
+        -272
+      ],
+      "id": "7323bcd2-60b3-4fd4-aad0-6dd0ea5c00b1",
+      "name": "Send email",
+      "webhookId": "c2ad70bd-4750-4d9d-9e52-c4993b8d24a3",
+      "credentials": {
+        "smtp": {
+          "id": "BirnamwVXP5zORBD",
+          "name": "kamal@clousor.in"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ahMHdDHgqXSW9t_vHx2sEPKJxApmOUAn8JGCD6n9KyQ",
+          "mode": "list",
+          "cachedResultName": "OFFER MASTER SHEET HEALTHCARE",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ahMHdDHgqXSW9t_vHx2sEPKJxApmOUAn8JGCD6n9KyQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1716830802,
+          "mode": "list",
+          "cachedResultName": "tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ahMHdDHgqXSW9t_vHx2sEPKJxApmOUAn8JGCD6n9KyQ/edit#gid=1716830802"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $('Loop Over Items').item.json.Email }}",
+            "email send": "TRUE"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Body",
+              "displayName": "Email Body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Linkedin DM",
+              "displayName": "Linkedin DM",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Linkedin Connection",
+              "displayName": "Linkedin Connection",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "One line personlize",
+              "displayName": "One line personlize",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email send",
+              "displayName": "email send",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1792,
+        -208
+      ],
+      "id": "04c453bb-a39f-448c-a51f-fb79aba5b4f5",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        -256
+      ],
+      "id": "70192ab4-01f9-4119-a7ca-6c8285341125",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5ac1c51f-da8d-4093-921e-b12f9174c334",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        -272
+      ],
+      "id": "1272e0ce-d492-4aeb-a31b-5fc954cf60ce",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8225a72f-857e-4aa2-83fa-073f957c3b02",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -128
+      ],
+      "id": "4228f7d0-ea31-43d9-86d4-c7447cdb9375",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "893f8e9d-ed3d-4994-9f86-5aef5116989a",
+              "name": "Subject",
+              "value": "={{ $json.Subject.replace('—', '-') }}",
+              "type": "string"
+            },
+            {
+              "id": "f5250104-ed1e-404e-bb6e-f41a64fc7b86",
+              "name": "Email Body",
+              "value": "={{ $json['Email Body'].replace('—', '-') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        -272
+      ],
+      "id": "d03b85dc-e5fc-483b-903e-99510e53eb42",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "06c5bcce-623c-4fad-a13d-75b7ec67997c",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-12-03T04:26:19.107Z",
+      "updatedAt": "2025-12-03T04:26:19.107Z",
+      "role": "workflow:owner",
+      "workflowId": "eHsqOyreGKKbQblu",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
