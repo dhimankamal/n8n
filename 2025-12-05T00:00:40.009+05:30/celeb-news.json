@@ -1,0 +1,462 @@
+{
+  "createdAt": "2025-05-24T16:15:26.402Z",
+  "updatedAt": "2025-08-27T08:04:37.000Z",
+  "id": "bZX9PRG4863TVsKE",
+  "name": "celeb news",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b6093f09-6d86-4816-9c6b-ff937efe374e",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://www.bollymoviereviewz.com/wp-json/wp/v2/posts",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "{\n  \"_embed\": true,\n  \"per_page\": 2,\n  \"orderby\": \"date\",\n  \"order\": \"desc\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "8b101b23-8f54-40cc-a99a-2098f2e6c885",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const post = item.json;\n  return {\n    json: {\n      id: post.id,\n      title: post.title.rendered,\n      content: post.content.rendered,\n      link: post.link,\n      mediaUrl: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || null\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "e21c5cd3-819e-4db5-826a-ae08dca00e39",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "68ad03b0-0b88-4f74-8811-4d41f960c723",
+              "leftValue": "={{$json.content !== null}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "eb07a137-ae56-458e-ba39-a337ade4e1a4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        0
+      ],
+      "id": "5c4c3b47-39f7-42dd-8593-5ba1cdc57cc3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BVUg1q7AlNfpn43M",
+          "name": "Mahvi Account gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You’re an expert SEO copywriter and HTML author. Rewrite the following movie review snippet in clear, engaging, SEO-friendly English, retaining all meaning but stripping out any existing HTML tags. Output only valid HTML markup (using appropriate <p>, <strong>, <em>, etc.), with a total length of 300–500 words.\n\n{{$json.content}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        1000,
+        -240
+      ],
+      "id": "289c11c9-e3ff-417a-a7d2-c02c0ae6a7d1",
+      "name": "Content Rewrite"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        0
+      ],
+      "id": "0ce7b82a-117a-455a-940b-b64cb2550bb6",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "dyImklbT9nYWZslf",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You’re an expert SEO copywriter. Rewrite the following blog post title to maximize search visibility and click-through rate. Output only the new title—keep it simple, clear, and free of any extra characters or formatting.\n\nOriginal title: “{{ $('If').item.json.title }}\"\nblog post: “{{ $json.output }}\"",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        1420,
+        -240
+      ],
+      "id": "260b154e-46d2-4bf2-b2b2-c9c4b430dcdc",
+      "name": "Title rewrite"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1bc7c52-4787-414e-9293-47f54059dc55",
+              "name": "output content",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "1be74a12-65f8-4749-81cf-6173d7b5d1df",
+              "name": "output title",
+              "value": "={{ $('Content Rewrite').item.json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "ec7c81ae-2041-47b5-8430-6b334c3d7cbf",
+              "name": "title",
+              "value": "={{ $('Code').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "e31ef06d-6ef5-4bee-8381-8a6d94242456",
+              "name": "content",
+              "value": "={{ $('Code').item.json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "311ca8a4-26e7-4a75-93c2-080ba76319aa",
+              "name": "original link",
+              "value": "={{ $('If').item.json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "ac462f72-bfc1-4f5d-b56e-4f29cccd87ca",
+              "name": "id",
+              "value": "={{ $('If').item.json.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1800,
+        -240
+      ],
+      "id": "4c6bdfe5-f9eb-49ce-b434-1b292d1e83c3",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "sendAndWait",
+        "user": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        2680,
+        920
+      ],
+      "id": "0d34c2c8-d730-4197-9cd2-a49bead44897",
+      "name": "Slack",
+      "webhookId": "385fa433-a0bd-466d-a85f-30e9fb8fbfdd",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "DiQvpSjjino4h84t",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1G9EKsYq0jnOh9psE-ugicbaVXT6dYS-e5hXbZ8DI4jk",
+          "mode": "list",
+          "cachedResultName": "gossip geeks",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1G9EKsYq0jnOh9psE-ugicbaVXT6dYS-e5hXbZ8DI4jk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "celeb",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1G9EKsYq0jnOh9psE-ugicbaVXT6dYS-e5hXbZ8DI4jk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "new content": "={{ $json['output content'] }}",
+            "new title": "={{ $json['output title'] }}",
+            "title": "={{ $json.title }}",
+            "content": "={{ $json.content }}",
+            "mediaurl": "={{ $json['original link'] }}",
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new content",
+              "displayName": "new content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new title",
+              "displayName": "new title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mediaurl",
+              "displayName": "mediaurl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2020,
+        -240
+      ],
+      "id": "e559473f-5f02-438c-9568-796d91ece61c",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Content Rewrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Content Rewrite",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Title rewrite",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Rewrite": {
+      "main": [
+        [
+          {
+            "node": "Title rewrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Title rewrite": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "4d85cf5f-70c5-4eb4-951d-56128c8d4db6",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-05-24T16:15:26.408Z",
+      "updatedAt": "2025-05-24T16:15:26.408Z",
+      "role": "workflow:owner",
+      "workflowId": "bZX9PRG4863TVsKE",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
