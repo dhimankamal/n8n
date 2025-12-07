@@ -1,0 +1,143 @@
+{
+  "createdAt": "2025-11-05T07:53:49.379Z",
+  "updatedAt": "2025-11-05T08:00:01.000Z",
+  "id": "ZbYRlmwmTWkmtAXs",
+  "name": "Leo clousor lead",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node: keep only the newest sheet row and prepare Slack text\n\n// Take the last item only (newest row in this poll)\nconst last = items[items.length - 1];\n\n// Helper to pick the first non-empty value from possible column names\nfunction pick(obj, ...keys) {\n  for (const k of keys) {\n    if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== \"\") {\n      return String(obj[k]).trim();\n    }\n  }\n  return \"\";\n}\nconst j = last.json;\n\n// Map your sheet columns here; add/remove aliases as needed\nconst name  = pick(j, \"full_name\", \"Full Name\", \"name\", \"Name\");\nconst phone = pick(j, \"phone_number\", \"Phone\", \"phone\", \"Phone Number\");\nconst email = pick(j, \"email\", \"Email\");\nconst need  = pick(j, \"what_do_you_need_help_with_today__(multiple_choice,_required)\");\n\nconst company  = pick(j, \"company_name\");\n\n// Build a single Slack-ready text field\nlast.json.slackText =\n  `*New Lead Added*\\n` +\n  `Name: ${name}\\n` +\n  `Phone: ${phone}\\n` +\n  `Email: ${email}\\n` +\n  `Company: ${company}\\n` +\n  `Need: ${need}`;\n\n// Return only one item forward to Slack node\nreturn [\n  {\n    json: {\n      slackText:\n        `*New Lead Added*\\n` +\n        `Name: ${name}\\n` +\n        `Phone: ${phone}\\n` +\n        `Email: ${email}\\n` +\n        `Company: ${company}\\n` +\n        `Need: ${need}`\n    }\n  }\n];"
+      },
+      "name": "Keep Last Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        160
+      ],
+      "id": "9e3389a6-bb8b-49f7-9ab0-c29b90ce2f2c"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Mbvuql0XQhQ6CpXPwQWZ7QAV6ZaDEW7uu-S_2Dk3gdo/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Mbvuql0XQhQ6CpXPwQWZ7QAV6ZaDEW7uu-S_2Dk3gdo/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        480,
+        160
+      ],
+      "id": "01d1c35c-8b46-4f0f-81c9-dcee023d3779",
+      "name": "Google Sheets Trigger2",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "9b2gywMX9PPgtoor",
+          "name": "Google Sheets Contact Clousor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08NPSSLQ5Q",
+          "mode": "list",
+          "cachedResultName": "leads-clousor"
+        },
+        "text": "={{ $json.slackText }}",
+        "otherOptions": {}
+      },
+      "name": "Update lead send in the lead group clousor",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        160
+      ],
+      "id": "c9163627-e962-4ade-a00a-c627bef478e8",
+      "webhookId": "2053dfcd-8992-4df4-a6ce-0ab2aacb467e",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Clousor N8N"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Keep Last Row": {
+      "main": [
+        [
+          {
+            "node": "Update lead send in the lead group clousor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Keep Last Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Google Sheets Trigger": {
+      "documentId": "1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s",
+      "sheetId": 0,
+      "lastIndexChecked": 28
+    },
+    "node:Google Sheets Trigger2": {
+      "documentId": "1Mbvuql0XQhQ6CpXPwQWZ7QAV6ZaDEW7uu-S_2Dk3gdo",
+      "sheetId": 0,
+      "lastIndexChecked": 5
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "6f6c7c8b-f209-44cb-8ab4-793718923409",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-11-05T07:53:49.384Z",
+      "updatedAt": "2025-11-05T07:53:49.384Z",
+      "role": "workflow:owner",
+      "workflowId": "ZbYRlmwmTWkmtAXs",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
