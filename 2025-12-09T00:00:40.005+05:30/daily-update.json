@@ -1,0 +1,40 @@
+{
+  "createdAt": "2025-05-19T17:16:21.442Z",
+  "updatedAt": "2025-08-27T08:04:41.000Z",
+  "id": "joL0Qings9ptWIEN",
+  "name": "daily update",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        -40
+      ],
+      "id": "16b0ca91-62e7-4556-a6f9-209b2a6a9ea1",
+      "name": "When clicking ‘Test workflow’"
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "16612970-f7d7-471f-8e8b-3269f9927c4a",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-05-19T17:16:21.453Z",
+      "updatedAt": "2025-05-19T17:16:21.453Z",
+      "role": "workflow:owner",
+      "workflowId": "joL0Qings9ptWIEN",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "tags": []
+}
