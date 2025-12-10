@@ -1,0 +1,612 @@
+{
+  "updatedAt": "2025-11-28T03:26:41.000Z",
+  "createdAt": "2025-10-29T15:20:18.573Z",
+  "id": "6DivNF6aVjd2KYMI",
+  "name": "Leo hunjan lead",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node: keep only the newest sheet row and prepare Slack text\n\n// Take the last item only (newest row in this poll)\nconst last = items[items.length - 1];\n\n// Helper to pick the first non-empty value from possible column names\nfunction pick(obj, ...keys) {\n  for (const k of keys) {\n    if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== \"\") {\n      return String(obj[k]).trim();\n    }\n  }\n  return \"\";\n}\n\nconst j = last.json;\n\n// Map your sheet columns here; add/remove aliases as needed\nconst name  = pick(j, \"full_name\", \"Full Name\", \"name\", \"Name\");\nconst phone = pick(j, \"phone_number\", \"Phone\", \"phone\", \"Phone Number\");\nconst email = pick(j, \"email\", \"Email\");\nconst need  = pick(j, \"what_do_you_need_help_with?_\", \"Need\", \"Query\", \"help\");\n\n// Build a single Slack-ready text field\nlast.json.slackText =\n  `*New Lead Added*\\n` +\n  `Name: ${name}\\n` +\n  `Phone: ${phone}\\n` +\n  `Email: ${email}\\n` +\n  `Need: ${need}`;\n\n// Return only one item forward to Slack node\nreturn [\n  {\n    json: {\n      slackText:\n        `*New Lead Added*\\n` +\n        `id: ${items.length}\\n` +\n        `Name: ${name}\\n` +\n        `Phone: ${phone}\\n` +\n        `Email: ${email}\\n` +\n        `Need: ${need}`\n    }\n  }\n];"
+      },
+      "name": "Keep Last Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        160
+      ],
+      "id": "02818d19-cca2-4a33-9eb1-dc0598a6133d"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        192,
+        160
+      ],
+      "id": "73903c2a-d1ac-49be-a2fe-2ffb2fe2dd0b",
+      "name": "Google Sheets Trigger2",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "9b2gywMX9PPgtoor",
+          "name": "Google Sheets Contact Clousor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09PULCQ533",
+          "mode": "list",
+          "cachedResultName": "hunjan-leads"
+        },
+        "text": "={{ $json.slackText }}",
+        "otherOptions": {}
+      },
+      "name": "Slack Post2",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        640,
+        160
+      ],
+      "id": "fc22fa1c-d856-4ff3-884e-13ec96c7f98c",
+      "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Clousor N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e11397ca-d89c-4178-b988-193cf339f697",
+              "leftValue": "={{ $json['Follow up Date'] }}",
+              "rightValue": "={{ $now.toFormat('dd/LL/yyyy') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        384
+      ],
+      "id": "02716312-0e34-4b6b-9248-ffe2ac6e3b1f",
+      "name": "Follow Up is Today?"
+    },
+    {
+      "parameters": {
+        "jsCode": "if (items.length === 0) {\n  // No follow ups for today, stop here so Slack doesn't run\n  return [];\n}\n\nconst lines = items.map((item, index) => {\n  const d = item.json;\n  return (index + 1) + '. ' +\n    d['Patient Name'] +\n    ' | ' + d['Patient Mobile Number'] +\n    ' | ' + d['Follow up Date'] +\n    (d['Patient Notes/Query'] ? ' | ' + d['Patient Notes/Query'] : '');\n});\n\nreturn [\n  {\n    json: {\n      slackText: '*Today\\'s follow ups (' + items.length + ')*\\n' + lines.join('\\n')\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        384
+      ],
+      "id": "bd7f2f25-d95d-493c-9d09-84f3ef36e597",
+      "name": "Build Slack Message"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09PULCQ533",
+          "mode": "list",
+          "cachedResultName": "hunjan-leads"
+        },
+        "text": "={{ $json.slackText }}",
+        "otherOptions": {}
+      },
+      "name": "Slack Post (Today Follow Ups)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        384
+      ],
+      "id": "9470ab47-f3f8-42d8-8066-64858db7f7ec",
+      "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Clousor N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM",
+          "mode": "list",
+          "cachedResultName": "Daily Direct Call Log - Hunjan Hospital (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1994826491,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM/edit#gid=1994826491"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        384
+      ],
+      "id": "9adc878c-9739-4014-b45e-a3fc19692694",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        384
+      ],
+      "id": "91f96db6-5df6-4dc1-b4eb-5adeee371b27",
+      "name": "Schedule Trigger",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "notesInFlow": false
+    }
+  ],
+  "connections": {
+    "Keep Last Row": {
+      "main": [
+        [
+          {
+            "node": "Slack Post2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Keep Last Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Follow Up is Today?": {
+      "main": [
+        [
+          {
+            "node": "Build Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Slack Post (Today Follow Ups)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Follow Up is Today?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Google Sheets Trigger": {
+      "documentId": "1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s",
+      "sheetId": 0,
+      "lastIndexChecked": 28
+    },
+    "node:Google Sheets Trigger2": {
+      "documentId": "1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s",
+      "sheetId": 0,
+      "lastIndexChecked": 95
+    },
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d683f752-2dad-4310-be9a-f00577ef404d",
+  "activeVersionId": "d683f752-2dad-4310-be9a-f00577ef404d",
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2025-10-29T15:20:18.576Z",
+      "createdAt": "2025-10-29T15:20:18.576Z",
+      "role": "workflow:owner",
+      "workflowId": "6DivNF6aVjd2KYMI",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-09T04:19:59.572Z",
+    "createdAt": "2025-12-09T04:19:59.572Z",
+    "versionId": "d683f752-2dad-4310-be9a-f00577ef404d",
+    "workflowId": "6DivNF6aVjd2KYMI",
+    "nodes": [
+      {
+        "parameters": {
+          "jsCode": "// n8n Code node: keep only the newest sheet row and prepare Slack text\n\n// Take the last item only (newest row in this poll)\nconst last = items[items.length - 1];\n\n// Helper to pick the first non-empty value from possible column names\nfunction pick(obj, ...keys) {\n  for (const k of keys) {\n    if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== \"\") {\n      return String(obj[k]).trim();\n    }\n  }\n  return \"\";\n}\n\nconst j = last.json;\n\n// Map your sheet columns here; add/remove aliases as needed\nconst name  = pick(j, \"full_name\", \"Full Name\", \"name\", \"Name\");\nconst phone = pick(j, \"phone_number\", \"Phone\", \"phone\", \"Phone Number\");\nconst email = pick(j, \"email\", \"Email\");\nconst need  = pick(j, \"what_do_you_need_help_with?_\", \"Need\", \"Query\", \"help\");\n\n// Build a single Slack-ready text field\nlast.json.slackText =\n  `*New Lead Added*\\n` +\n  `Name: ${name}\\n` +\n  `Phone: ${phone}\\n` +\n  `Email: ${email}\\n` +\n  `Need: ${need}`;\n\n// Return only one item forward to Slack node\nreturn [\n  {\n    json: {\n      slackText:\n        `*New Lead Added*\\n` +\n        `id: ${items.length}\\n` +\n        `Name: ${name}\\n` +\n        `Phone: ${phone}\\n` +\n        `Email: ${email}\\n` +\n        `Need: ${need}`\n    }\n  }\n];"
+        },
+        "name": "Keep Last Row",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          160
+        ],
+        "id": "02818d19-cca2-4a33-9eb1-dc0598a6133d"
+      },
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "documentId": {
+            "__rl": true,
+            "value": "https://docs.google.com/spreadsheets/d/1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s/edit?gid=0#gid=0",
+            "mode": "url"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "https://docs.google.com/spreadsheets/d/1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s/edit?gid=0#gid=0",
+            "mode": "url"
+          },
+          "event": "rowAdded",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheetsTrigger",
+        "typeVersion": 1,
+        "position": [
+          192,
+          160
+        ],
+        "id": "73903c2a-d1ac-49be-a2fe-2ffb2fe2dd0b",
+        "name": "Google Sheets Trigger2",
+        "credentials": {
+          "googleSheetsTriggerOAuth2Api": {
+            "id": "9b2gywMX9PPgtoor",
+            "name": "Google Sheets Contact Clousor"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "select": "channel",
+          "channelId": {
+            "__rl": true,
+            "value": "C09PULCQ533",
+            "mode": "list",
+            "cachedResultName": "hunjan-leads"
+          },
+          "text": "={{ $json.slackText }}",
+          "otherOptions": {}
+        },
+        "name": "Slack Post2",
+        "type": "n8n-nodes-base.slack",
+        "typeVersion": 2,
+        "position": [
+          640,
+          160
+        ],
+        "id": "fc22fa1c-d856-4ff3-884e-13ec96c7f98c",
+        "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+        "credentials": {
+          "slackApi": {
+            "id": "2LlRRGmYe6uTO8Xv",
+            "name": "Clousor N8N"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "e11397ca-d89c-4178-b988-193cf339f697",
+                "leftValue": "={{ $json['Follow up Date'] }}",
+                "rightValue": "={{ $now.toFormat('dd/LL/yyyy') }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          640,
+          384
+        ],
+        "id": "02716312-0e34-4b6b-9248-ffe2ac6e3b1f",
+        "name": "Follow Up is Today?"
+      },
+      {
+        "parameters": {
+          "jsCode": "if (items.length === 0) {\n  // No follow ups for today, stop here so Slack doesn't run\n  return [];\n}\n\nconst lines = items.map((item, index) => {\n  const d = item.json;\n  return (index + 1) + '. ' +\n    d['Patient Name'] +\n    ' | ' + d['Patient Mobile Number'] +\n    ' | ' + d['Follow up Date'] +\n    (d['Patient Notes/Query'] ? ' | ' + d['Patient Notes/Query'] : '');\n});\n\nreturn [\n  {\n    json: {\n      slackText: '*Today\\'s follow ups (' + items.length + ')*\\n' + lines.join('\\n')\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          864,
+          384
+        ],
+        "id": "bd7f2f25-d95d-493c-9d09-84f3ef36e597",
+        "name": "Build Slack Message"
+      },
+      {
+        "parameters": {
+          "select": "channel",
+          "channelId": {
+            "__rl": true,
+            "value": "C09PULCQ533",
+            "mode": "list",
+            "cachedResultName": "hunjan-leads"
+          },
+          "text": "={{ $json.slackText }}",
+          "otherOptions": {}
+        },
+        "name": "Slack Post (Today Follow Ups)",
+        "type": "n8n-nodes-base.slack",
+        "typeVersion": 2,
+        "position": [
+          1088,
+          384
+        ],
+        "id": "9470ab47-f3f8-42d8-8066-64858db7f7ec",
+        "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+        "credentials": {
+          "slackApi": {
+            "id": "2LlRRGmYe6uTO8Xv",
+            "name": "Clousor N8N"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM",
+            "mode": "list",
+            "cachedResultName": "Daily Direct Call Log - Hunjan Hospital (Responses)",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1994826491,
+            "mode": "list",
+            "cachedResultName": "Form responses 1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM/edit#gid=1994826491"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          416,
+          384
+        ],
+        "id": "9adc878c-9739-4014-b45e-a3fc19692694",
+        "name": "Get row(s) in sheet1",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "contact.itskamal Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 8,
+                "triggerAtMinute": 30
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          192,
+          384
+        ],
+        "id": "91f96db6-5df6-4dc1-b4eb-5adeee371b27",
+        "name": "Schedule Trigger",
+        "executeOnce": false,
+        "alwaysOutputData": false,
+        "retryOnFail": false,
+        "notesInFlow": false
+      }
+    ],
+    "connections": {
+      "Keep Last Row": {
+        "main": [
+          [
+            {
+              "node": "Slack Post2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Sheets Trigger2": {
+        "main": [
+          [
+            {
+              "node": "Keep Last Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Follow Up is Today?": {
+        "main": [
+          [
+            {
+              "node": "Build Slack Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Slack Message": {
+        "main": [
+          [
+            {
+              "node": "Slack Post (Today Follow Ups)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet1": {
+        "main": [
+          [
+            {
+              "node": "Follow Up is Today?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
