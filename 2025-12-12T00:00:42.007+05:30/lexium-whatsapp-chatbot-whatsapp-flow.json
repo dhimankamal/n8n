@@ -1,0 +1,222 @@
+{
+  "updatedAt": "2025-08-27T08:04:12.000Z",
+  "createdAt": "2025-08-10T04:26:12.491Z",
+  "id": "5AojDjY1Rg7dYcRa",
+  "name": "Lexium Whatsapp Chatbot whatsapp Flow",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "=+919914817311",
+        "textBody": "={{'Thank you ' + $json.data.customer.firstName + '! Your complaint ID is ' + $json.data.id + '. We have marked it as Pending.'}}",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Ticket Reply",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        320,
+        -240
+      ],
+      "id": "b539cc13-bf9a-4d42-a018-d2bbc30cd200",
+      "webhookId": "d372fba1-4bf4-4449-a410-f361d1d9fb6a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "=+919914817311",
+        "textBody": "={{$json.output}}",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Reply (Mid-Step)",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        80,
+        100
+      ],
+      "id": "7ccd6dab-2c2c-46bf-95bd-967b3aa35d1d",
+      "webhookId": "d372fba1-4bf4-4449-a410-f361d1d9fb6a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://lexium-chat-bot.vercel.app/api/complaint/create",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"firstName\": \"{{ $json.name }}\",\n  \"phone\": \"{{ $json.phone && $json.phone.startsWith('+') ? $json.phone : ('+91' + $json.phone) }}\",\n  \"location\": \"{{ $json.location }}\",\n  \"description\": \"{{ $json.description }}\"\n}",
+        "options": {}
+      },
+      "name": "HTTP Request Create Complaint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        -240
+      ],
+      "id": "608c2d31-5451-4ddc-8bf0-14ef928d8890"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.sendToApi}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "IF Send to API?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -60
+      ],
+      "id": "a2b6a45f-8a9b-4617-a5ec-b83492ff6caf"
+    },
+    {
+      "parameters": {
+        "functionCode": "const incomingMessages = $json && $json.messages ? $json.messages : null;\n// if there's no messages payload, stop (prevents reading [0] of undefined)\nif (!incomingMessages || !incomingMessages.length) {\n  return [];\n}\n\nconst from = incomingMessages[0].from;\nconst data = this.getWorkflowStaticData('global');\nif (!data[from]) data[from] = { step: 0 };\nconst state = data[from];\nconst text = incomingMessages[0].text && incomingMessages[0].text.body ? incomingMessages[0].text.body.trim() : '';\nlet reply;\n\nif (text.toLowerCase() === 'reset') {\n  state.step = 1;\n  reply = \"No problem! Let's start again.\\nPlease reply with your Full Name:\";\n  return [{ json: { output: reply, sendToApi: false, messages: incomingMessages } }];\n} else {\n  switch (state.step) {\n    case 0:\n      if (text.toLowerCase() === 'complaint') {\n        reply = \"Thank you for reaching out! Let's file your complaint.\\nPlease reply with your Full Name:\";\n        state.step = 1;\n      } else {\n        return [];\n      }\n      break;\n    case 1:\n      state.name = text;\n      reply = '2. Phone Number:';\n      state.step = 2;\n      break;\n    case 2:\n      if (!/^((\\+91)?\\s?\\d{10})$/.test(text)) {\n        reply = '2. Phone is invalid, please enter your phone number again:';\n      } else {\n        state.phone = text.replace(/\\s+/g, '');\n        reply = '3. Location (address or area):';\n        state.step = 3;\n      }\n      break;\n    case 3:\n      state.location = text;\n      reply = '4. Please describe the issue in brief:';\n      state.step = 4;\n      break;\n    case 4:\n      state.issue = text;\n      state.step = 0;\n      return [{\n        json: {\n          sendToApi: true,\n          name: state.name,\n          phone: state.phone,\n          location: state.location,\n          description: state.issue,\n          messages: incomingMessages\n        }\n      }];\n  }\n}\n\nreturn [{ json: { output: reply, sendToApi: false, messages: incomingMessages } }];"
+      },
+      "name": "Conversation Logic",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        -60
+      ],
+      "id": "7456fe60-0f70-42d1-a02f-4786b1516d11"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "name": "WhatsApp Msg1",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -740,
+        -60
+      ],
+      "id": "9485b0b3-29d4-482c-80e1-83cbdb63dd22",
+      "webhookId": "e6db6651-e6a6-446d-aaad-8ff126010e87",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "xrA71QVvLSRL9BKe",
+          "name": "WhatsApp OAuth account MEM"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "HTTP Request Create Complaint": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Ticket Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Send to API?": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Create Complaint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Reply (Mid-Step)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Logic": {
+      "main": [
+        [
+          {
+            "node": "IF Send to API?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Msg1": {
+      "main": [
+        [
+          {
+            "node": "Conversation Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "919781452072": {
+        "step": 0,
+        "name": "kamal",
+        "phone": "9781452072",
+        "location": "Mohali",
+        "issue": "Ac"
+      },
+      "919914817311": {
+        "step": 1,
+        "name": "khushal",
+        "phone": "9914817311",
+        "location": "nabha",
+        "issue": "cooler is not workin"
+      }
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "efa52d43-9564-4b55-823b-738e9f885a89",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-08-10T04:26:12.496Z",
+      "createdAt": "2025-08-10T04:26:12.496Z",
+      "role": "workflow:owner",
+      "workflowId": "5AojDjY1Rg7dYcRa",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
