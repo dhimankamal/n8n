@@ -1,0 +1,1418 @@
+{
+  "updatedAt": "2025-12-15T08:22:18.984Z",
+  "createdAt": "2025-12-15T03:15:29.817Z",
+  "id": "ZlYaM7mNzp8hVuYx",
+  "name": "Ai video analysis and update in the sheet",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.VIEW_LINK }}",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "id": "e6f36a13-2b4d-4c79-b8a3-44a85957a659",
+      "name": "Download Video from Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        848,
+        -192
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "aVptThQEykPvXOYs",
+          "name": "kamal.clousor@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        32
+      ],
+      "id": "7f40c0ea-44f4-42f1-a616-49a70503d8a2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+          "mode": "list",
+          "cachedResultName": "tintqube",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "artvideo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -48,
+        -64
+      ],
+      "id": "ff486218-4bba-4abf-b80f-6004470332a0",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -64
+      ],
+      "id": "791528e2-5e37-449a-96f8-3ad55c1b7ec2",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        -192
+      ],
+      "id": "15d3c647-1223-402f-8db1-b7c1df5e9501",
+      "name": "Analyze video",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "T1IVuJLZgtbnLcJH",
+          "name": "Google Gemini(PaLM) Api contac.clousor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content }}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are TintQube’s YouTube and Instagram SEO copywriter for art and craft videos (drawing, sketching, painting, DIY art). Your job is to turn the creator’s video overview into:\n\nA high performing YouTube title\n\nA YouTube description that drives search + watch time\n\nYouTube tags (not hashtags)\n\nYouTube hashtags (3 max for the description)\n\nAn Instagram caption with hashtags\n\nInputs you will receive\n\nYou will receive a single block called VIDEO_OVERVIEW with details like:\n\nWhat is being made, subject, style (realistic, doodle, mandala, etc.)\n\nMedium (pencil, charcoal, markers, watercolor, digital)\n\nVideo type (Shorts or long form), duration, pace (timelapse, real time)\n\nTarget audience (beginners, relaxing, advanced)\n\nAny special hook (easy, satisfying, ASMR, step by step)\n\nOptional: materials list, tools, reference photo, voiceover language, CTA links\n\nNon negotiable rules\n\nDo not invent facts. If something is missing, write it neutrally or add a placeholder.\n\nNo keyword stuffing. Natural English only.\n\nNo fake claims like “best”, “number 1”, “guaranteed” unless explicitly provided.\n\nTitle must be clickable but honest.\n\nOptimize for search intent: “how to”, “easy”, “step by step”, “drawing tutorial”, etc. when relevant.\n\nKeep YouTube title ideally 55 to 65 characters (Shorts can be shorter).\n\nFirst 2 lines of the YouTube description must include the main keyword and the hook.\n\nAdd a clear CTA: subscribe, comment, save, share (choose what fits the video).\n\nOutput must be in the exact JSON format below.\n\nSEO process (do this silently)\n\nExtract the core topic, medium, difficulty level, and unique hook\n\nChoose 1 primary keyword phrase + 5 to 10 secondary keywords\n\nWrite title that includes primary keyword naturally\n\nWrite description that includes primary keyword in first 2 lines, then value, then materials, then CTA\n\nCreate 15 to 25 YouTube tags: mix broad + specific + long tail\n\nCreate exactly 3 YouTube hashtags\n\nCreate an Instagram caption: hook line, short story or value, CTA, then 10 to 20 hashtags\n\nOutput JSON format (return only this)\n{\n  \"channel_name\": \"TintQube\",\n  \"video_type\": \"shorts_or_long\",\n  \"primary_keyword\": \"\",\n  \"secondary_keywords\": [\"\", \"\", \"\"],\n  \"youtube_title\": \"\",\n  \"youtube_description\": \"\",\n  \"youtube_tags\": [\"\", \"\", \"\"],\n  \"youtube_hashtags\": [\"\", \"\", \"\"],\n  \"instagram_caption\": \"\",\n  \"instagram_hashtags\": [\"\", \"\", \"\"],\n  \"notes_or_placeholders\": [\"\"]\n}\n\nYouTube description structure to follow\n\nLine 1 to 2: Hook + main keyword\n\nShort paragraph: what viewer will learn or enjoy\n\nMaterials/tools (if provided)\n\nCTA: “Subscribe for more…”, “Comment what to draw next…”\n\nOptional: chapters only if long form\n\nEnd with exactly 3 hashtags\n\nInstagram caption structure to follow\n\nFirst line: strong hook (curiosity or outcome)\n\n2 to 4 lines: value (what, how, why it’s satisfying)\n\nCTA: “Save this”, “Share”, “Follow TintQube”\n\nThen hashtags (10 to 20)\n\nTemplate you paste as input every time\nVIDEO_OVERVIEW:\nVideo type: (Shorts/Long)\nDuration:\nTopic/Subject:\nMedium/Tools:\nStyle: (realistic, doodle, mandala, etc.)\nDifficulty: (beginner/intermediate/advanced)\nWhat happens in the video (steps):\nHook (what makes it satisfying or unique):\nVoiceover: (yes/no, language)\nMusic/ASMR: (yes/no)\nTarget viewer:\nCTA link (optional):\nExtra notes:"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1392,
+        -192
+      ],
+      "id": "3cb4de28-12c4-4d4e-af8b-ce9d566e471a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1296,
+        32
+      ],
+      "id": "908f0920-7177-4895-b030-dbb9056e7ba4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "XNOylXtje9ckQrwF",
+          "name": "Main clousor account(not use paid account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Download Video from Drive').item.json.row_number }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1552,
+        32
+      ],
+      "id": "5d704dc1-3a4d-45e0-9a05-2512e0328ac2",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1424,
+        32
+      ],
+      "id": "d242c09c-f47c-4e2b-9413-da1fa05e75e4",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "XNOylXtje9ckQrwF",
+          "name": "Main clousor account(not use paid account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"channel_name\": \"TintQube\",\n  \"video_type\": \"shorts\",\n  \"primary_keyword\": \"yellow marker drawing\",\n  \"secondary_keywords\": [\n    \"marker art tutorial\",\n    \"easy marker drawing\",\n    \"drawing with markers\"\n  ],\n  \"youtube_title\": \"Yellow Marker Drawing Demo | Easy Marker Tip\",\n  \"youtube_description\": \"Learn how to use a yellow marker in this quick demo.\\n\\nMaterials: yellow marker, white paper.\\n\\nSubscribe for more.\\n\\n#MarkerDrawing #ArtTutorial #EasyDrawing\",\n  \"youtube_tags\": [\n    \"yellow marker drawing\",\n    \"how to use a yellow marker\",\n    \"marker art tutorial\",\n    \"easy marker drawing\",\n    \"drawing with markers\"\n  ],\n  \"youtube_hashtags\": [\n    \"#MarkerDrawing\",\n    \"#ArtTutorial\",\n    \"#EasyDrawing\"\n  ],\n  \"instagram_caption\": \"Yellow marker demo, clean and simple. 🎨\\nSave this and try it.\\nFollow TintQube for more.\",\n  \"instagram_hashtags\": [\n    \"#MarkerDrawing\",\n    \"#ArtTutorial\",\n    \"#EasyDrawing\",\n    \"#Markers\",\n    \"#TintQube\"\n  ],\n  \"notes_or_placeholders\": [\n    \"Duration not provided\",\n    \"Voiceover details not provided\"\n  ]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1680,
+        32
+      ],
+      "id": "e3d190f3-33ec-4e02-88dc-861430ef01c9",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+          "mode": "list",
+          "cachedResultName": "tintqube",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "artvideo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "FILE_ID": "={{ $('Get row(s) in sheet').item.json.FILE_ID }}",
+            "ANALYSIS": "={{ $('Analyze video').item.json.content }}",
+            "video_type": "={{ $json.output.video_type }}",
+            "primary_keyword": "={{ $json.output.primary_keyword }}",
+            "secondary_keywords": "={{ $json.output.secondary_keywords }}",
+            "youtube_title": "={{ $json.output.youtube_title }}",
+            "youtube_description": "={{ $json.output.youtube_description }}",
+            "youtube_tags": "={{ $json.output.youtube_tags }}",
+            "youtube_hashtags": "={{ $json.output.youtube_hashtags }}",
+            "instagram_caption": "={{ $json.output.instagram_caption }}",
+            "instagram_hashtags": "={{ $json.output.instagram_hashtags }}",
+            "notes_or_placeholders": "={{ $json.output.notes_or_placeholders }}"
+          },
+          "matchingColumns": [
+            "FILE_ID"
+          ],
+          "schema": [
+            {
+              "id": "FILE_ID",
+              "displayName": "FILE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "VIEW_LINK",
+              "displayName": "VIEW_LINK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "DOWNLOAD_LINK",
+              "displayName": "DOWNLOAD_LINK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "OPEN",
+              "displayName": "OPEN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "MIME_TYPE",
+              "displayName": "MIME_TYPE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "SIZE_BYTES",
+              "displayName": "SIZE_BYTES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CREATED_TIME",
+              "displayName": "CREATED_TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "MODIFIED_TIME",
+              "displayName": "MODIFIED_TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ANALYSIS",
+              "displayName": "ANALYSIS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "video_type",
+              "displayName": "video_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "primary_keyword",
+              "displayName": "primary_keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "secondary_keywords",
+              "displayName": "secondary_keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "youtube_title",
+              "displayName": "youtube_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "youtube_description",
+              "displayName": "youtube_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "youtube_tags",
+              "displayName": "youtube_tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "youtube_hashtags",
+              "displayName": "youtube_hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "instagram_caption",
+              "displayName": "instagram_caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "instagram_hashtags",
+              "displayName": "instagram_hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes_or_placeholders",
+              "displayName": "notes_or_placeholders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1888,
+        -64
+      ],
+      "id": "6bbb765d-0cea-46c9-9fc4-8d78edf61b7a",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        624,
+        -64
+      ],
+      "id": "3e9961f1-c77a-49c4-a9f5-2edca13f86fb",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b35c056f-1a2a-4ca9-a156-6549e550e2d4",
+              "leftValue": "={{ $json.youtube_title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        176,
+        -64
+      ],
+      "id": "8970f206-e5e4-427b-b56d-ab3b7a28f089",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -272,
+        -160
+      ],
+      "id": "de752d3b-504a-4eeb-a88b-011e5f5ad018",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "Download Video from Drive": {
+      "main": [
+        [
+          {
+            "node": "Analyze video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze video": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Download Video from Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "6ffe497f-57c9-4ba3-88bc-b763b2840035",
+  "activeVersionId": "6ffe497f-57c9-4ba3-88bc-b763b2840035",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-15T03:15:29.821Z",
+      "createdAt": "2025-12-15T03:15:29.821Z",
+      "role": "workflow:owner",
+      "workflowId": "ZlYaM7mNzp8hVuYx",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-15T08:22:18.985Z",
+    "createdAt": "2025-12-15T08:22:18.985Z",
+    "versionId": "6ffe497f-57c9-4ba3-88bc-b763b2840035",
+    "workflowId": "ZlYaM7mNzp8hVuYx",
+    "nodes": [
+      {
+        "parameters": {
+          "authentication": "oAuth2",
+          "operation": "download",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.VIEW_LINK }}",
+            "mode": "url"
+          },
+          "options": {}
+        },
+        "id": "e6f36a13-2b4d-4c79-b8a3-44a85957a659",
+        "name": "Download Video from Drive",
+        "type": "n8n-nodes-base.googleDrive",
+        "position": [
+          848,
+          -192
+        ],
+        "typeVersion": 1,
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "aVptThQEykPvXOYs",
+            "name": "kamal.clousor@gmail.com"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -272,
+          32
+        ],
+        "id": "7f40c0ea-44f4-42f1-a616-49a70503d8a2",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+            "mode": "list",
+            "cachedResultName": "tintqube",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "artvideo",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -48,
+          -64
+        ],
+        "id": "ff486218-4bba-4abf-b80f-6004470332a0",
+        "name": "Get row(s) in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "contact.itskamal Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "maxItems": 3
+        },
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          400,
+          -64
+        ],
+        "id": "791528e2-5e37-449a-96f8-3ad55c1b7ec2",
+        "name": "Limit"
+      },
+      {
+        "parameters": {
+          "resource": "video",
+          "operation": "analyze",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "models/gemini-2.5-flash"
+          },
+          "inputType": "binary",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1,
+        "position": [
+          1072,
+          -192
+        ],
+        "id": "15d3c647-1223-402f-8db1-b7c1df5e9501",
+        "name": "Analyze video",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "T1IVuJLZgtbnLcJH",
+            "name": "Google Gemini(PaLM) Api contac.clousor"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.content }}",
+          "hasOutputParser": true,
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "You are TintQube’s YouTube and Instagram SEO copywriter for art and craft videos (drawing, sketching, painting, DIY art). Your job is to turn the creator’s video overview into:\n\nA high performing YouTube title\n\nA YouTube description that drives search + watch time\n\nYouTube tags (not hashtags)\n\nYouTube hashtags (3 max for the description)\n\nAn Instagram caption with hashtags\n\nInputs you will receive\n\nYou will receive a single block called VIDEO_OVERVIEW with details like:\n\nWhat is being made, subject, style (realistic, doodle, mandala, etc.)\n\nMedium (pencil, charcoal, markers, watercolor, digital)\n\nVideo type (Shorts or long form), duration, pace (timelapse, real time)\n\nTarget audience (beginners, relaxing, advanced)\n\nAny special hook (easy, satisfying, ASMR, step by step)\n\nOptional: materials list, tools, reference photo, voiceover language, CTA links\n\nNon negotiable rules\n\nDo not invent facts. If something is missing, write it neutrally or add a placeholder.\n\nNo keyword stuffing. Natural English only.\n\nNo fake claims like “best”, “number 1”, “guaranteed” unless explicitly provided.\n\nTitle must be clickable but honest.\n\nOptimize for search intent: “how to”, “easy”, “step by step”, “drawing tutorial”, etc. when relevant.\n\nKeep YouTube title ideally 55 to 65 characters (Shorts can be shorter).\n\nFirst 2 lines of the YouTube description must include the main keyword and the hook.\n\nAdd a clear CTA: subscribe, comment, save, share (choose what fits the video).\n\nOutput must be in the exact JSON format below.\n\nSEO process (do this silently)\n\nExtract the core topic, medium, difficulty level, and unique hook\n\nChoose 1 primary keyword phrase + 5 to 10 secondary keywords\n\nWrite title that includes primary keyword naturally\n\nWrite description that includes primary keyword in first 2 lines, then value, then materials, then CTA\n\nCreate 15 to 25 YouTube tags: mix broad + specific + long tail\n\nCreate exactly 3 YouTube hashtags\n\nCreate an Instagram caption: hook line, short story or value, CTA, then 10 to 20 hashtags\n\nOutput JSON format (return only this)\n{\n  \"channel_name\": \"TintQube\",\n  \"video_type\": \"shorts_or_long\",\n  \"primary_keyword\": \"\",\n  \"secondary_keywords\": [\"\", \"\", \"\"],\n  \"youtube_title\": \"\",\n  \"youtube_description\": \"\",\n  \"youtube_tags\": [\"\", \"\", \"\"],\n  \"youtube_hashtags\": [\"\", \"\", \"\"],\n  \"instagram_caption\": \"\",\n  \"instagram_hashtags\": [\"\", \"\", \"\"],\n  \"notes_or_placeholders\": [\"\"]\n}\n\nYouTube description structure to follow\n\nLine 1 to 2: Hook + main keyword\n\nShort paragraph: what viewer will learn or enjoy\n\nMaterials/tools (if provided)\n\nCTA: “Subscribe for more…”, “Comment what to draw next…”\n\nOptional: chapters only if long form\n\nEnd with exactly 3 hashtags\n\nInstagram caption structure to follow\n\nFirst line: strong hook (curiosity or outcome)\n\n2 to 4 lines: value (what, how, why it’s satisfying)\n\nCTA: “Save this”, “Share”, “Follow TintQube”\n\nThen hashtags (10 to 20)\n\nTemplate you paste as input every time\nVIDEO_OVERVIEW:\nVideo type: (Shorts/Long)\nDuration:\nTopic/Subject:\nMedium/Tools:\nStyle: (realistic, doodle, mandala, etc.)\nDifficulty: (beginner/intermediate/advanced)\nWhat happens in the video (steps):\nHook (what makes it satisfying or unique):\nVoiceover: (yes/no, language)\nMusic/ASMR: (yes/no)\nTarget viewer:\nCTA link (optional):\nExtra notes:"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          1392,
+          -192
+        ],
+        "id": "3cb4de28-12c4-4d4e-af8b-ce9d566e471a",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4.1-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          1296,
+          32
+        ],
+        "id": "908f0920-7177-4895-b030-dbb9056e7ba4",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "XNOylXtje9ckQrwF",
+            "name": "Main clousor account(not use paid account)"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "={{ $('Download Video from Drive').item.json.row_number }}"
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "typeVersion": 1.3,
+        "position": [
+          1552,
+          32
+        ],
+        "id": "5d704dc1-3a4d-45e0-9a05-2512e0328ac2",
+        "name": "Simple Memory"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4.1-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          1424,
+          32
+        ],
+        "id": "d242c09c-f47c-4e2b-9413-da1fa05e75e4",
+        "name": "OpenAI Chat Model1",
+        "credentials": {
+          "openAiApi": {
+            "id": "XNOylXtje9ckQrwF",
+            "name": "Main clousor account(not use paid account)"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n  \"channel_name\": \"TintQube\",\n  \"video_type\": \"shorts\",\n  \"primary_keyword\": \"yellow marker drawing\",\n  \"secondary_keywords\": [\n    \"marker art tutorial\",\n    \"easy marker drawing\",\n    \"drawing with markers\"\n  ],\n  \"youtube_title\": \"Yellow Marker Drawing Demo | Easy Marker Tip\",\n  \"youtube_description\": \"Learn how to use a yellow marker in this quick demo.\\n\\nMaterials: yellow marker, white paper.\\n\\nSubscribe for more.\\n\\n#MarkerDrawing #ArtTutorial #EasyDrawing\",\n  \"youtube_tags\": [\n    \"yellow marker drawing\",\n    \"how to use a yellow marker\",\n    \"marker art tutorial\",\n    \"easy marker drawing\",\n    \"drawing with markers\"\n  ],\n  \"youtube_hashtags\": [\n    \"#MarkerDrawing\",\n    \"#ArtTutorial\",\n    \"#EasyDrawing\"\n  ],\n  \"instagram_caption\": \"Yellow marker demo, clean and simple. 🎨\\nSave this and try it.\\nFollow TintQube for more.\",\n  \"instagram_hashtags\": [\n    \"#MarkerDrawing\",\n    \"#ArtTutorial\",\n    \"#EasyDrawing\",\n    \"#Markers\",\n    \"#TintQube\"\n  ],\n  \"notes_or_placeholders\": [\n    \"Duration not provided\",\n    \"Voiceover details not provided\"\n  ]\n}\n"
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          1680,
+          32
+        ],
+        "id": "e3d190f3-33ec-4e02-88dc-861430ef01c9",
+        "name": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+            "mode": "list",
+            "cachedResultName": "tintqube",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "artvideo",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "FILE_ID": "={{ $('Get row(s) in sheet').item.json.FILE_ID }}",
+              "ANALYSIS": "={{ $('Analyze video').item.json.content }}",
+              "video_type": "={{ $json.output.video_type }}",
+              "primary_keyword": "={{ $json.output.primary_keyword }}",
+              "secondary_keywords": "={{ $json.output.secondary_keywords }}",
+              "youtube_title": "={{ $json.output.youtube_title }}",
+              "youtube_description": "={{ $json.output.youtube_description }}",
+              "youtube_tags": "={{ $json.output.youtube_tags }}",
+              "youtube_hashtags": "={{ $json.output.youtube_hashtags }}",
+              "instagram_caption": "={{ $json.output.instagram_caption }}",
+              "instagram_hashtags": "={{ $json.output.instagram_hashtags }}",
+              "notes_or_placeholders": "={{ $json.output.notes_or_placeholders }}"
+            },
+            "matchingColumns": [
+              "FILE_ID"
+            ],
+            "schema": [
+              {
+                "id": "FILE_ID",
+                "displayName": "FILE_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "NAME",
+                "displayName": "NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "VIEW_LINK",
+                "displayName": "VIEW_LINK",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "DOWNLOAD_LINK",
+                "displayName": "DOWNLOAD_LINK",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "OPEN",
+                "displayName": "OPEN",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "MIME_TYPE",
+                "displayName": "MIME_TYPE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "SIZE_BYTES",
+                "displayName": "SIZE_BYTES",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "CREATED_TIME",
+                "displayName": "CREATED_TIME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "MODIFIED_TIME",
+                "displayName": "MODIFIED_TIME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "ANALYSIS",
+                "displayName": "ANALYSIS",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "video_type",
+                "displayName": "video_type",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "primary_keyword",
+                "displayName": "primary_keyword",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "secondary_keywords",
+                "displayName": "secondary_keywords",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "youtube_title",
+                "displayName": "youtube_title",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "youtube_description",
+                "displayName": "youtube_description",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "youtube_tags",
+                "displayName": "youtube_tags",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "youtube_hashtags",
+                "displayName": "youtube_hashtags",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "instagram_caption",
+                "displayName": "instagram_caption",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "instagram_hashtags",
+                "displayName": "instagram_hashtags",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "notes_or_placeholders",
+                "displayName": "notes_or_placeholders",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1888,
+          -64
+        ],
+        "id": "6bbb765d-0cea-46c9-9fc4-8d78edf61b7a",
+        "name": "Update row in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "contact.itskamal Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          624,
+          -64
+        ],
+        "id": "3e9961f1-c77a-49c4-a9f5-2edca13f86fb",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "b35c056f-1a2a-4ca9-a156-6549e550e2d4",
+                "leftValue": "={{ $json.youtube_title }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.3,
+        "position": [
+          176,
+          -64
+        ],
+        "id": "8970f206-e5e4-427b-b56d-ab3b7a28f089",
+        "name": "Filter"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -272,
+          -160
+        ],
+        "id": "de752d3b-504a-4eeb-a88b-011e5f5ad018",
+        "name": "Schedule Trigger"
+      }
+    ],
+    "connections": {
+      "Download Video from Drive": {
+        "main": [
+          [
+            {
+              "node": "Analyze video",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limit": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analyze video": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simple Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row in sheet": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Download Video from Drive",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "Limit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Clourax Clourax",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
