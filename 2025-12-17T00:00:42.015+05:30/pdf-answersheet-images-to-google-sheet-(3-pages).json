@@ -1,0 +1,335 @@
+{
+  "updatedAt": "2025-12-16T08:52:43.489Z",
+  "createdAt": "2025-12-16T05:44:15.783Z",
+  "id": "jD9zwhVAvuBav0P5",
+  "name": "PDF AnswerSheet Images to Google Sheet (3 pages)",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "answersheet/scan",
+        "options": {}
+      },
+      "id": "e40b5c7a-4f4f-4550-bc5c-7028fb83c0b1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1952,
+        -1008
+      ],
+      "webhookId": "ee7e10a9-3099-4168-a4a0-8fc775755cdc"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "page1_url",
+              "value": "={{$json.page1_url}}"
+            },
+            {
+              "name": "page2_url",
+              "value": "={{$json.page2_url}}"
+            },
+            {
+              "name": "page3_url",
+              "value": "={{$json.page3_url}}"
+            },
+            {
+              "name": "student_file_name",
+              "value": "={{$json.student_file_name || ''}}"
+            },
+            {
+              "name": "model",
+              "value": "={{$json.model || 'gpt-5-mini'}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "11de183e-da9c-4450-be42-e878cb161766",
+      "name": "Set Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -1728,
+        -1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (JavaScript)\n// Mode: Run Once for All Items\n\nfunction findFirstStringWithJsonFences(obj) {\n  const stack = [obj];\n  while (stack.length) {\n    const cur = stack.pop();\n    if (typeof cur === \"string\") {\n      if (cur.includes(\"```\") && cur.includes(\"{\") && cur.includes(\"}\")) return cur;\n    } else if (Array.isArray(cur)) {\n      for (const v of cur) stack.push(v);\n    } else if (cur && typeof cur === \"object\") {\n      for (const k of Object.keys(cur)) stack.push(cur[k]);\n    }\n  }\n  return null;\n}\n\nfunction stripCodeFences(s) {\n  // removes ```json ... ``` or ``` ... ```\n  return s\n    .replace(/^\\s*```(?:json)?\\s*/i, \"\")\n    .replace(/\\s*```\\s*$/i, \"\")\n    .trim();\n}\n\nconst items = $input.all();\nconst out = [];\n\nfor (const item of items) {\n  // 1) try common places first\n  let text =\n    item.json?.content?.[0]?.text ??\n    item.json?.content?.text ??\n    item.json?.text;\n\n  // 2) fallback: deep-search anywhere in the payload\n  if (!text) text = findFirstStringWithJsonFences(item.json);\n\n  if (!text || typeof text !== \"string\") {\n    throw new Error(\"Could not find the OpenAI text containing the JSON in this item.\");\n  }\n\n  const cleaned = stripCodeFences(text);\n\n  let parsed;\n  try {\n    parsed = JSON.parse(cleaned);\n  } catch (e) {\n    // If OpenAI returned something like escaped JSON inside a string, this helps sometimes:\n    // Try to locate the first { ... last }\n    const start = cleaned.indexOf(\"{\");\n    const end = cleaned.lastIndexOf(\"}\");\n    if (start !== -1 && end !== -1 && end > start) {\n      parsed = JSON.parse(cleaned.slice(start, end + 1));\n    } else {\n      throw new Error(\"JSON.parse failed. Cleaned text was not valid JSON.\");\n    }\n  }\n\n  out.push({ json: parsed });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1728,
+        -784
+      ],
+      "id": "c1dd3126-28eb-4311-8198-d64bac7fa444",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1952,
+        -368
+      ],
+      "id": "2b761bc1-a227-4ff9-beaa-0805fcf42e02",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "You are a strict OCR + form understanding model.\n\nYou will receive 3 scanned answer sheet images.\nEach image contains question grids with ticked options.Extract every filled bubble or tick mark accurately for each question number across all sections (e.g., LP, PA, LC, TPS, QR, SS, PRA, etc.).\\n\\nReturn a complete JSON array in this schema:\\n{\\n  \\\"meta\\\": {\\n    \\\"roll_no\\\": \\\"22\\\",\\n    \\\"name\\\": \\\"Neha\\\",\\n    \\\"class\\\": \\\"10th\\\",\\n    \\\"section\\\": \\\"E\\\",\\n    \\\"age\\\": 16,\\n    \\\"gender\\\": \\\"Female\\\",\\n    \\\"school\\\": \\\"Govt. Model Sr. Sec. Smart School, Seihan\\\"\\n  },\\n  \\\"answers\\\": [\\n    {\\\"section\\\": \\\"Linguistic Proficiency\\\", \\\"q_no\\\": 1, \\\"answer\\\": \\\"A\\\"},\\n    {\\\"section\\\": \\\"Linguistic Proficiency\\\", \\\"q_no\\\": 2, \\\"answer\\\": \\\"B\\\"},\\n    {\\\"section\\\": \\\"Pattern Analysis\\\", \\\"q_no\\\": 1, \\\"answer\\\": \\\"C\\\"},\\n    {\\\"section\\\": \\\"Logical Comprehension\\\", \\\"q_no\\\": 1, \\\"answer\\\": \\\"D\\\"},\\n    ...\\n  ]\\n}\\n\\nImportant rules:\\n- Include all questions visible in all sections (do not skip any number).\\n- Do not use null or empty strings for any field.\\n- Each question must have a section name, number, and single selected answer (A/B/C/D or Agree/Disagree where applicable).\\n- If multiple are marked, pick the most clearly ticked or filled option.\\n- Preserve sequential numbering across pages.\\n- Return strictly valid JSON only.\\n\\nFinally, summarize total question count and sections detected at the end of output as:\\n\\\"summary\\\": {\\\"total_questions\\\": <count>, \\\"sections\\\": [\\\"LP\\\", \\\"PA\\\", ...]}.",
+        "imageUrls": "https://cdn.psychowaves.org/uploads/6940f955abea0_neha_page-0001.jpg,https://cdn.psychowaves.org/uploads/6940f9580efcb_neha_page-0002.jpg,https://cdn.psychowaves.org/uploads/6940f95abed27_neha_page-0003.jpg",
+        "options": {
+          "maxTokens": 50000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -1952,
+        -784
+      ],
+      "id": "d684528b-fda6-4e78-8aba-5be22ad9c097",
+      "name": "Analyze image",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "XNOylXtje9ckQrwF",
+          "name": "Main clousor account(not use paid account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://cdn.psychowaves.org/uploads/6940f955abea0_neha_page-0001.jpg",
+        "options": {}
+      },
+      "id": "6f2f105b-f77f-403c-9194-ead03a6507cb",
+      "name": "Download Page 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -1728,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://cdn.psychowaves.org/uploads/6940f9580efcb_neha_page-0002.jpg",
+        "options": {}
+      },
+      "id": "d09d7317-d5e5-4194-9208-8527f2d229e5",
+      "name": "Download Page 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -1728,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://cdn.psychowaves.org/uploads/69411606d521d_WhatsApp%20Image%202025-12-16%20at%2013.47.35%20(1).jpeg",
+        "options": {}
+      },
+      "id": "dd7f5f0a-f498-4e8c-b191-0c9373acbd50",
+      "name": "Download Page 3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -1728,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1424,
+        -384
+      ],
+      "id": "ccbf97c4-7f3c-4f7e-bb48-53595631ce5f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "You are an OCR + answer-sheet understanding engine.\n\nINPUT:\nYou will receive exactly iamges. Use ONLY what is visible in those images. Do not guess, do not reuse prior outputs, do not copy examples.\n\nTASK:\nExtract the selected option for EVERY question visible across ALL sections and pages. Read ticks/filled bubbles only.\n\nOUTPUT (STRICT JSON ONLY):\nReturn exactly one JSON object in this schema:\n\n{\n  \"answers\": [\n    {\"section\": \"<Full section name exactly as on sheet>\", \"q_no\": <number>, \"answer\": \"<A|B|C|D|Agree|Disagree>\"}\n  ],\n  \"summary\": {\"total_questions\": <count>},\n}\n\nRULES (MUST FOLLOW):\n\n- Return strictly valid JSON only. No markdown. No commentary.\n",
+        "inputType": "base64",
+        "options": {
+          "maxTokens": 90000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -1232,
+        -368
+      ],
+      "id": "dcafb9bb-09b7-4fa7-936b-628611da31e0",
+      "name": "Analyze image1",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "XNOylXtje9ckQrwF",
+          "name": "Main clousor account(not use paid account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nfunction extractText(obj) {\n  // Your input format: item.json[0][0].content[0].text\n  if (Array.isArray(obj)) {\n    // find first message-like object inside nested arrays\n    for (const a of obj) {\n      const t = extractText(a);\n      if (t) return t;\n    }\n    return null;\n  }\n\n  // direct message object\n  if (obj?.content?.[0]?.text) return obj.content[0].text;\n\n  // sometimes it's wrapped deeper\n  for (const k of Object.keys(obj || {})) {\n    const v = obj[k];\n    const t = extractText(v);\n    if (t) return t;\n  }\n\n  return null;\n}\n\nreturn items.map((item) => {\n  const root = item.json;\n\n  const text = extractText(root);\n  if (!text) throw new Error(\"Could not find content[0].text in input item.\");\n\n  let s = String(text).trim();\n\n  // remove markdown code fences if ever present\n  s = s.replace(/^\\s*```(?:json)?\\s*/i, \"\").replace(/\\s*```\\s*$/i, \"\").trim();\n\n  // Extract first JSON object block\n  const start = s.indexOf(\"{\");\n  const end = s.lastIndexOf(\"}\");\n  if (start === -1 || end === -1 || end <= start) {\n    throw new Error(\"Could not locate JSON object braces in the text.\");\n  }\n  s = s.slice(start, end + 1);\n\n  // Parse JSON (handles escaped newlines etc.)\n  let data;\n  try {\n    data = JSON.parse(s);\n  } catch (e) {\n    const fixed = s.replace(/\\\\n/g, \"\\n\").replace(/\\\\\"/g, '\"');\n    data = JSON.parse(fixed);\n  }\n\n  return { json: data };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1056,
+        -368
+      ],
+      "id": "d7768999-b710-4be3-86c8-e445304504c8",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Input": {
+      "main": [
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download Page 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download Page 2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download Page 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Page 1": {
+      "main": [
+        []
+      ]
+    },
+    "Download Page 2": {
+      "main": [
+        []
+      ]
+    },
+    "Download Page 3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Analyze image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "77803b4f-103f-45e3-a5ef-72d5bde594ca",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-16T05:44:15.790Z",
+      "createdAt": "2025-12-16T05:44:15.790Z",
+      "role": "workflow:owner",
+      "workflowId": "jD9zwhVAvuBav0P5",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
