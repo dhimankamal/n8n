@@ -1,0 +1,1145 @@
+{
+  "updatedAt": "2025-12-15T08:21:46.674Z",
+  "createdAt": "2025-12-15T05:30:59.370Z",
+  "id": "MDhElM9hrVgry5BS",
+  "name": "quintart publish social media",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        32
+      ],
+      "id": "05c33cf2-2826-4a9c-bd1c-7e9160955857",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.youtube_title }}",
+        "regionCode": "IN",
+        "categoryId": "27",
+        "options": {
+          "description": "={{ $json.youtube_description }}",
+          "tags": "={{ $json.youtube_tags }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -160
+      ],
+      "id": "b31f6993-23e1-43cc-8be8-04ddeb1d421d",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "r6BgBgpr7E5Uo18t",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+          "mode": "list",
+          "cachedResultName": "tintqube",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "artvideo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -224,
+        -160
+      ],
+      "id": "1e1eacaa-a420-4b17-a86b-b526880a73b5",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -160
+      ],
+      "id": "7d289a08-cceb-450c-9420-191ac99ada6a",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.VIEW_LINK }}",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "id": "8355edb9-75b9-4389-a00d-e24362352521",
+      "name": "Download Video from Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        448,
+        -160
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "aVptThQEykPvXOYs",
+          "name": "kamal.clousor@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+          "mode": "list",
+          "cachedResultName": "tintqube",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "artvideo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "FILE_ID": "={{ $('Download Video from Drive').item.json.FILE_ID }}",
+            "published_youtube": "TRUE",
+            "youtube_id": "={{ $json.uploadId }}"
+          },
+          "matchingColumns": [
+            "FILE_ID"
+          ],
+          "schema": [
+            {
+              "id": "FILE_ID",
+              "displayName": "FILE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "VIEW_LINK",
+              "displayName": "VIEW_LINK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "DOWNLOAD_LINK",
+              "displayName": "DOWNLOAD_LINK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "OPEN",
+              "displayName": "OPEN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "MIME_TYPE",
+              "displayName": "MIME_TYPE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "SIZE_BYTES",
+              "displayName": "SIZE_BYTES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CREATED_TIME",
+              "displayName": "CREATED_TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "MODIFIED_TIME",
+              "displayName": "MODIFIED_TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ANALYSIS",
+              "displayName": "ANALYSIS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "video_type",
+              "displayName": "video_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "primary_keyword",
+              "displayName": "primary_keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "secondary_keywords",
+              "displayName": "secondary_keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "youtube_title",
+              "displayName": "youtube_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "youtube_description",
+              "displayName": "youtube_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "youtube_tags",
+              "displayName": "youtube_tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "youtube_hashtags",
+              "displayName": "youtube_hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "instagram_caption",
+              "displayName": "instagram_caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "instagram_hashtags",
+              "displayName": "instagram_hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "notes_or_placeholders",
+              "displayName": "notes_or_placeholders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "published_youtube",
+              "displayName": "published_youtube",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "youtube_id",
+              "displayName": "youtube_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -160
+      ],
+      "id": "5951a3f9-70c4-4b66-acb8-84400562068b",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c3fff1c0-1853-4b03-a26a-cb4278d2a61e",
+              "leftValue": "={{ $json.youtube_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "397f0a25-eb47-47a3-89c2-502e85b25964",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        -320
+      ],
+      "id": "fea8f3d4-3c7c-4468-80b9-f4ecad738088",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        -160
+      ],
+      "id": "addda1d7-8e7c-49df-82d4-5c0d9c5ea1aa",
+      "name": "Schedule Trigger1"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Download Video from Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video from Drive": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a video": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:Schedule Trigger1": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9b3c9473-2b08-4c84-be76-ceca4994e8c3",
+  "activeVersionId": "9b3c9473-2b08-4c84-be76-ceca4994e8c3",
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2025-12-15T05:30:59.380Z",
+      "createdAt": "2025-12-15T05:30:59.380Z",
+      "role": "workflow:owner",
+      "workflowId": "MDhElM9hrVgry5BS",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-15T08:21:46.675Z",
+    "createdAt": "2025-12-15T08:21:46.675Z",
+    "versionId": "9b3c9473-2b08-4c84-be76-ceca4994e8c3",
+    "workflowId": "MDhElM9hrVgry5BS",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -448,
+          32
+        ],
+        "id": "05c33cf2-2826-4a9c-bd1c-7e9160955857",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "resource": "video",
+          "operation": "upload",
+          "title": "={{ $json.youtube_title }}",
+          "regionCode": "IN",
+          "categoryId": "27",
+          "options": {
+            "description": "={{ $json.youtube_description }}",
+            "tags": "={{ $json.youtube_tags }}"
+          }
+        },
+        "type": "n8n-nodes-base.youTube",
+        "typeVersion": 1,
+        "position": [
+          672,
+          -160
+        ],
+        "id": "b31f6993-23e1-43cc-8be8-04ddeb1d421d",
+        "name": "Upload a video",
+        "credentials": {
+          "youTubeOAuth2Api": {
+            "id": "r6BgBgpr7E5Uo18t",
+            "name": "YouTube account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+            "mode": "list",
+            "cachedResultName": "tintqube",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "artvideo",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -224,
+          -160
+        ],
+        "id": "1e1eacaa-a420-4b17-a86b-b526880a73b5",
+        "name": "Get row(s) in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "contact.itskamal Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          224,
+          -160
+        ],
+        "id": "7d289a08-cceb-450c-9420-191ac99ada6a",
+        "name": "Limit"
+      },
+      {
+        "parameters": {
+          "authentication": "oAuth2",
+          "operation": "download",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.VIEW_LINK }}",
+            "mode": "url"
+          },
+          "options": {}
+        },
+        "id": "8355edb9-75b9-4389-a00d-e24362352521",
+        "name": "Download Video from Drive",
+        "type": "n8n-nodes-base.googleDrive",
+        "position": [
+          448,
+          -160
+        ],
+        "typeVersion": 1,
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "aVptThQEykPvXOYs",
+            "name": "kamal.clousor@gmail.com"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+            "mode": "list",
+            "cachedResultName": "tintqube",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "artvideo",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "FILE_ID": "={{ $('Download Video from Drive').item.json.FILE_ID }}",
+              "published_youtube": "TRUE",
+              "youtube_id": "={{ $json.uploadId }}"
+            },
+            "matchingColumns": [
+              "FILE_ID"
+            ],
+            "schema": [
+              {
+                "id": "FILE_ID",
+                "displayName": "FILE_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "NAME",
+                "displayName": "NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "VIEW_LINK",
+                "displayName": "VIEW_LINK",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "DOWNLOAD_LINK",
+                "displayName": "DOWNLOAD_LINK",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "OPEN",
+                "displayName": "OPEN",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "MIME_TYPE",
+                "displayName": "MIME_TYPE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "SIZE_BYTES",
+                "displayName": "SIZE_BYTES",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "CREATED_TIME",
+                "displayName": "CREATED_TIME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "MODIFIED_TIME",
+                "displayName": "MODIFIED_TIME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "ANALYSIS",
+                "displayName": "ANALYSIS",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "video_type",
+                "displayName": "video_type",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "primary_keyword",
+                "displayName": "primary_keyword",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "secondary_keywords",
+                "displayName": "secondary_keywords",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "youtube_title",
+                "displayName": "youtube_title",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "youtube_description",
+                "displayName": "youtube_description",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "youtube_tags",
+                "displayName": "youtube_tags",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "youtube_hashtags",
+                "displayName": "youtube_hashtags",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "instagram_caption",
+                "displayName": "instagram_caption",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "instagram_hashtags",
+                "displayName": "instagram_hashtags",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "notes_or_placeholders",
+                "displayName": "notes_or_placeholders",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "published_youtube",
+                "displayName": "published_youtube",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "youtube_id",
+                "displayName": "youtube_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          896,
+          -160
+        ],
+        "id": "5951a3f9-70c4-4b66-acb8-84400562068b",
+        "name": "Update row in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "contact.itskamal Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c3fff1c0-1853-4b03-a26a-cb4278d2a61e",
+                "leftValue": "={{ $json.youtube_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.3,
+        "position": [
+          0,
+          -160
+        ],
+        "id": "397f0a25-eb47-47a3-89c2-502e85b25964",
+        "name": "Filter"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 17
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -448,
+          -320
+        ],
+        "id": "fea8f3d4-3c7c-4468-80b9-f4ecad738088",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 8
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -448,
+          -160
+        ],
+        "id": "addda1d7-8e7c-49df-82d4-5c0d9c5ea1aa",
+        "name": "Schedule Trigger1"
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limit": {
+        "main": [
+          [
+            {
+              "node": "Download Video from Drive",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Download Video from Drive": {
+        "main": [
+          [
+            {
+              "node": "Upload a video",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload a video": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "Limit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger1": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Clourax Clourax",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
