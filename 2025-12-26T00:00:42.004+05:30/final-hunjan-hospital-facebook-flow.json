@@ -1,0 +1,872 @@
+{
+  "updatedAt": "2025-12-25T04:18:19.388Z",
+  "createdAt": "2025-12-25T03:47:48.210Z",
+  "id": "Wk6QFiPrNbMSbfU6",
+  "name": "Final Hunjan Hospital Facebook Flow",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node: keep only the newest sheet row and prepare Slack text\n\n// Take the last item only (newest row in this poll)\nconst last = items[items.length - 1];\n\n// Helper to pick the first non-empty value from possible column names\nfunction pick(obj, ...keys) {\n  for (const k of keys) {\n    if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== \"\") {\n      return String(obj[k]).trim();\n    }\n  }\n  return \"\";\n}\n\nconst j = last.json;\n\n// Map your sheet columns here; add/remove aliases as needed\nconst name  = pick(j, \"full_name\", \"Full Name\", \"name\", \"Name\");\nconst phone = pick(j, \"phone_number\", \"Phone\", \"phone\", \"Phone Number\");\nconst email = pick(j, \"email\", \"Email\");\nconst need  = pick(j, \"what_do_you_need_help_with?_\", \"Need\", \"Query\", \"help\");\n\n// Build a single Slack-ready text field\nlast.json.slackText =\n  `*New Lead Added*\\n` +\n  `Name: ${name}\\n` +\n  `Phone: ${phone}\\n` +\n  `Email: ${email}\\n` +\n  `Need: ${need}`;\n\n// Return only one item forward to Slack node\nreturn [\n  {\n    json: {\n      slackText:\n        `*New Lead Added*\\n` +\n        `Name: ${name}\\n` +\n        `Phone: ${phone}\\n` +\n        `Email: ${email}\\n` +\n        `Need: ${need}`\n    }\n  }\n];"
+      },
+      "name": "Keep Last Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -96
+      ],
+      "id": "b1fcd5c7-6fd0-4298-9301-b898c449f668"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s/edit?gid=1839843477#gid=1839843477",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s/edit?gid=1839843477#gid=1839843477",
+          "mode": "url"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        144,
+        -96
+      ],
+      "id": "53132821-f32d-4057-bee6-0c5a0e1387c4",
+      "name": "Google Sheets Trigger2",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "9b2gywMX9PPgtoor",
+          "name": "Google Sheets Contact Clousor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09PULCQ533",
+          "mode": "list",
+          "cachedResultName": "hunjan-leads"
+        },
+        "text": "={{ $json.slackText }}",
+        "otherOptions": {}
+      },
+      "name": "Slack Post2",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        592,
+        -192
+      ],
+      "id": "bba3836a-e478-4168-9d66-c19fdbe7e893",
+      "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Clousor N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e11397ca-d89c-4178-b988-193cf339f697",
+              "leftValue": "={{ $json['Follow up Date'] }}",
+              "rightValue": "={{ $now.toFormat('dd/LL/yyyy') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        320
+      ],
+      "id": "5c223954-e5d8-4284-9ca8-da4afa307d46",
+      "name": "Follow Up is Today?"
+    },
+    {
+      "parameters": {
+        "jsCode": "if (items.length === 0) {\n  // No follow ups for today, stop here so Slack doesn't run\n  return [];\n}\n\nconst lines = items.map((item, index) => {\n  const d = item.json;\n  return (index + 1) + '. ' +\n    d['Patient Name'] +\n    ' | ' + d['Patient Mobile Number'] +\n    ' | ' + d['Follow up Date'] +\n    (d['Patient Notes/Query'] ? ' | ' + d['Patient Notes/Query'] : '');\n});\n\nreturn [\n  {\n    json: {\n      slackText: '*Today\\'s follow ups (' + items.length + ')*\\n' + lines.join('\\n')\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        320
+      ],
+      "id": "af734b5b-43ac-486e-823d-87fd46fa01a8",
+      "name": "Build Slack Message"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09PULCQ533",
+          "mode": "list",
+          "cachedResultName": "hunjan-leads"
+        },
+        "text": "={{ $json.slackText }}",
+        "otherOptions": {}
+      },
+      "name": "Slack Post (Today Follow Ups)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        224
+      ],
+      "id": "c6e1adc8-adf8-40f4-9735-dbf44c89ad49",
+      "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Clousor N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM",
+          "mode": "list",
+          "cachedResultName": "Daily Direct Call Log - Hunjan Hospital (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1994826491,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM/edit#gid=1994826491"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        368,
+        320
+      ],
+      "id": "3c0391ea-0dbf-44ee-ab10-2126b9c1a960",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        320
+      ],
+      "id": "a43840a8-6bd0-4221-a8e0-20864e2f8bbb",
+      "name": "Schedule Trigger",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "=default",
+        "chatId": "=120363407865788337@g.us",
+        "text": "={{ $json.slackText }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1040,
+        416
+      ],
+      "id": "b081c434-58b2-4646-bd60-66522452b18a",
+      "name": "Send message to whatsapp group",
+      "credentials": {
+        "wahaApi": {
+          "id": "Ydpm9rWYmvpQEcpR",
+          "name": "Business whatsapp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "=default",
+        "chatId": "=120363407865788337@g.us",
+        "text": "={{ $json.slackText }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        592,
+        0
+      ],
+      "id": "321cc6db-bcfc-48dd-9a58-33fde337f499",
+      "name": "Send message to whatsapp group1",
+      "credentials": {
+        "wahaApi": {
+          "id": "Ydpm9rWYmvpQEcpR",
+          "name": "Business whatsapp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## This is latest sheet setup with leads \n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 1184,
+        "width": 1504
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -112,
+        -464
+      ],
+      "typeVersion": 1,
+      "id": "dc70c79e-fb7b-4a3f-9a4f-473800a6d96d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "=default",
+        "chatId": "=120363407865788337@g.us",
+        "text": "=Hello‬, update please: How many calls were received today? Mention which were good queries and which were fake.",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        592,
+        -384
+      ],
+      "id": "48c094c9-c467-4562-a3ec-9deed05068be",
+      "name": "Send message to whatsapp group2",
+      "credentials": {
+        "wahaApi": {
+          "id": "Ydpm9rWYmvpQEcpR",
+          "name": "Business whatsapp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 18,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        -384
+      ],
+      "id": "3679c098-9e69-45d7-8ad6-40baa90fa5ec",
+      "name": "Schedule Trigger1",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "notesInFlow": false
+    }
+  ],
+  "connections": {
+    "Keep Last Row": {
+      "main": [
+        [
+          {
+            "node": "Slack Post2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send message to whatsapp group1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Keep Last Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Follow Up is Today?": {
+      "main": [
+        [
+          {
+            "node": "Build Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Slack Post (Today Follow Ups)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send message to whatsapp group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Follow Up is Today?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Send message to whatsapp group2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:Google Sheets Trigger2": {
+      "documentId": "1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s",
+      "sheetId": 1839843477,
+      "lastIndexChecked": 4
+    },
+    "node:Schedule Trigger1": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "1e104000-1532-43b3-9701-e57ffaaadb3f",
+  "activeVersionId": "1e104000-1532-43b3-9701-e57ffaaadb3f",
+  "triggerCount": 3,
+  "shared": [
+    {
+      "updatedAt": "2025-12-25T03:47:48.216Z",
+      "createdAt": "2025-12-25T03:47:48.216Z",
+      "role": "workflow:owner",
+      "workflowId": "Wk6QFiPrNbMSbfU6",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-25T04:18:19.389Z",
+    "createdAt": "2025-12-25T04:18:19.389Z",
+    "versionId": "1e104000-1532-43b3-9701-e57ffaaadb3f",
+    "workflowId": "Wk6QFiPrNbMSbfU6",
+    "nodes": [
+      {
+        "parameters": {
+          "jsCode": "// n8n Code node: keep only the newest sheet row and prepare Slack text\n\n// Take the last item only (newest row in this poll)\nconst last = items[items.length - 1];\n\n// Helper to pick the first non-empty value from possible column names\nfunction pick(obj, ...keys) {\n  for (const k of keys) {\n    if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== \"\") {\n      return String(obj[k]).trim();\n    }\n  }\n  return \"\";\n}\n\nconst j = last.json;\n\n// Map your sheet columns here; add/remove aliases as needed\nconst name  = pick(j, \"full_name\", \"Full Name\", \"name\", \"Name\");\nconst phone = pick(j, \"phone_number\", \"Phone\", \"phone\", \"Phone Number\");\nconst email = pick(j, \"email\", \"Email\");\nconst need  = pick(j, \"what_do_you_need_help_with?_\", \"Need\", \"Query\", \"help\");\n\n// Build a single Slack-ready text field\nlast.json.slackText =\n  `*New Lead Added*\\n` +\n  `Name: ${name}\\n` +\n  `Phone: ${phone}\\n` +\n  `Email: ${email}\\n` +\n  `Need: ${need}`;\n\n// Return only one item forward to Slack node\nreturn [\n  {\n    json: {\n      slackText:\n        `*New Lead Added*\\n` +\n        `Name: ${name}\\n` +\n        `Phone: ${phone}\\n` +\n        `Email: ${email}\\n` +\n        `Need: ${need}`\n    }\n  }\n];"
+        },
+        "name": "Keep Last Row",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          368,
+          -96
+        ],
+        "id": "b1fcd5c7-6fd0-4298-9301-b898c449f668"
+      },
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "documentId": {
+            "__rl": true,
+            "value": "https://docs.google.com/spreadsheets/d/1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s/edit?gid=1839843477#gid=1839843477",
+            "mode": "url"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "https://docs.google.com/spreadsheets/d/1OqcQVEon5B_j3OiCPIV_BQTitoE3bkpyQKdDljJRt_s/edit?gid=1839843477#gid=1839843477",
+            "mode": "url"
+          },
+          "event": "rowAdded",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheetsTrigger",
+        "typeVersion": 1,
+        "position": [
+          144,
+          -96
+        ],
+        "id": "53132821-f32d-4057-bee6-0c5a0e1387c4",
+        "name": "Google Sheets Trigger2",
+        "credentials": {
+          "googleSheetsTriggerOAuth2Api": {
+            "id": "9b2gywMX9PPgtoor",
+            "name": "Google Sheets Contact Clousor"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "select": "channel",
+          "channelId": {
+            "__rl": true,
+            "value": "C09PULCQ533",
+            "mode": "list",
+            "cachedResultName": "hunjan-leads"
+          },
+          "text": "={{ $json.slackText }}",
+          "otherOptions": {}
+        },
+        "name": "Slack Post2",
+        "type": "n8n-nodes-base.slack",
+        "typeVersion": 2,
+        "position": [
+          592,
+          -192
+        ],
+        "id": "bba3836a-e478-4168-9d66-c19fdbe7e893",
+        "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+        "credentials": {
+          "slackApi": {
+            "id": "2LlRRGmYe6uTO8Xv",
+            "name": "Clousor N8N"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "e11397ca-d89c-4178-b988-193cf339f697",
+                "leftValue": "={{ $json['Follow up Date'] }}",
+                "rightValue": "={{ $now.toFormat('dd/LL/yyyy') }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          592,
+          320
+        ],
+        "id": "5c223954-e5d8-4284-9ca8-da4afa307d46",
+        "name": "Follow Up is Today?"
+      },
+      {
+        "parameters": {
+          "jsCode": "if (items.length === 0) {\n  // No follow ups for today, stop here so Slack doesn't run\n  return [];\n}\n\nconst lines = items.map((item, index) => {\n  const d = item.json;\n  return (index + 1) + '. ' +\n    d['Patient Name'] +\n    ' | ' + d['Patient Mobile Number'] +\n    ' | ' + d['Follow up Date'] +\n    (d['Patient Notes/Query'] ? ' | ' + d['Patient Notes/Query'] : '');\n});\n\nreturn [\n  {\n    json: {\n      slackText: '*Today\\'s follow ups (' + items.length + ')*\\n' + lines.join('\\n')\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          816,
+          320
+        ],
+        "id": "af734b5b-43ac-486e-823d-87fd46fa01a8",
+        "name": "Build Slack Message"
+      },
+      {
+        "parameters": {
+          "select": "channel",
+          "channelId": {
+            "__rl": true,
+            "value": "C09PULCQ533",
+            "mode": "list",
+            "cachedResultName": "hunjan-leads"
+          },
+          "text": "={{ $json.slackText }}",
+          "otherOptions": {}
+        },
+        "name": "Slack Post (Today Follow Ups)",
+        "type": "n8n-nodes-base.slack",
+        "typeVersion": 2,
+        "position": [
+          1040,
+          224
+        ],
+        "id": "c6e1adc8-adf8-40f4-9735-dbf44c89ad49",
+        "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+        "credentials": {
+          "slackApi": {
+            "id": "2LlRRGmYe6uTO8Xv",
+            "name": "Clousor N8N"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM",
+            "mode": "list",
+            "cachedResultName": "Daily Direct Call Log - Hunjan Hospital (Responses)",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1994826491,
+            "mode": "list",
+            "cachedResultName": "Form responses 1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uYYqomwYrJkbDBys2jexD-Ul5AlG4I5Y8LAH2AhyvVM/edit#gid=1994826491"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          368,
+          320
+        ],
+        "id": "3c0391ea-0dbf-44ee-ab10-2126b9c1a960",
+        "name": "Get row(s) in sheet1",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "contact.itskamal Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 8,
+                "triggerAtMinute": 30
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          144,
+          320
+        ],
+        "id": "a43840a8-6bd0-4221-a8e0-20864e2f8bbb",
+        "name": "Schedule Trigger",
+        "executeOnce": false,
+        "alwaysOutputData": false,
+        "retryOnFail": false,
+        "notesInFlow": false
+      },
+      {
+        "parameters": {
+          "resource": "Chatting",
+          "operation": "Send Text",
+          "session": "=default",
+          "chatId": "=120363407865788337@g.us",
+          "text": "={{ $json.slackText }}",
+          "requestOptions": {}
+        },
+        "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+        "typeVersion": 202502,
+        "position": [
+          1040,
+          416
+        ],
+        "id": "b081c434-58b2-4646-bd60-66522452b18a",
+        "name": "Send message to whatsapp group",
+        "credentials": {
+          "wahaApi": {
+            "id": "Ydpm9rWYmvpQEcpR",
+            "name": "Business whatsapp"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "Chatting",
+          "operation": "Send Text",
+          "session": "=default",
+          "chatId": "=120363407865788337@g.us",
+          "text": "={{ $json.slackText }}",
+          "requestOptions": {}
+        },
+        "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+        "typeVersion": 202502,
+        "position": [
+          592,
+          0
+        ],
+        "id": "321cc6db-bcfc-48dd-9a58-33fde337f499",
+        "name": "Send message to whatsapp group1",
+        "credentials": {
+          "wahaApi": {
+            "id": "Ydpm9rWYmvpQEcpR",
+            "name": "Business whatsapp"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "content": "## This is latest sheet setup with leads \n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+          "height": 1184,
+          "width": 1504
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -112,
+          -464
+        ],
+        "typeVersion": 1,
+        "id": "dc70c79e-fb7b-4a3f-9a4f-473800a6d96d",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "resource": "Chatting",
+          "operation": "Send Text",
+          "session": "=default",
+          "chatId": "=120363407865788337@g.us",
+          "text": "=Hello‬, update please: How many calls were received today? Mention which were good queries and which were fake.",
+          "requestOptions": {}
+        },
+        "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+        "typeVersion": 202502,
+        "position": [
+          592,
+          -384
+        ],
+        "id": "48c094c9-c467-4562-a3ec-9deed05068be",
+        "name": "Send message to whatsapp group2",
+        "credentials": {
+          "wahaApi": {
+            "id": "Ydpm9rWYmvpQEcpR",
+            "name": "Business whatsapp"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 18,
+                "triggerAtMinute": 30
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          336,
+          -384
+        ],
+        "id": "3679c098-9e69-45d7-8ad6-40baa90fa5ec",
+        "name": "Schedule Trigger1",
+        "executeOnce": false,
+        "alwaysOutputData": false,
+        "retryOnFail": false,
+        "notesInFlow": false
+      }
+    ],
+    "connections": {
+      "Keep Last Row": {
+        "main": [
+          [
+            {
+              "node": "Slack Post2",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Send message to whatsapp group1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Sheets Trigger2": {
+        "main": [
+          [
+            {
+              "node": "Keep Last Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Follow Up is Today?": {
+        "main": [
+          [
+            {
+              "node": "Build Slack Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Slack Message": {
+        "main": [
+          [
+            {
+              "node": "Slack Post (Today Follow Ups)",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Send message to whatsapp group",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet1": {
+        "main": [
+          [
+            {
+              "node": "Follow Up is Today?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger1": {
+        "main": [
+          [
+            {
+              "node": "Send message to whatsapp group2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Clourax Clourax",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
