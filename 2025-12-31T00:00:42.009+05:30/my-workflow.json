@@ -1,0 +1,159 @@
+{
+  "updatedAt": "2025-08-27T08:05:43.000Z",
+  "createdAt": "2025-04-07T07:12:38.809Z",
+  "id": "V7fquN5uCH0AuLgr",
+  "name": "My workflow",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d962c15b-93cb-4544-a1a0-6e84d02687cb",
+      "name": "HTML to PDF",
+      "type": "@custom-js/n8n-nodes-pdf-toolkit.html2Pdf",
+      "position": [
+        1340,
+        180
+      ],
+      "typeVersion": 1,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const input = $input.item.json\nconst bill_to = input['Bill To'].split('\\n').map(item => '<p>' + item + '</p>')\nconst from = input['From'].split('\\n').map(item => '<p>' + item + '</p>')\nconst details = input['Details'].map(item => {\n  const price = item.price*item.qty\n  return `\n  <tr>\n    <td>${item.description}</td>\n    <td>$${item.price}</td>\n    <td>${item.qty}</td>\n    <td>$${price}</td>\n  </tr>\n  `\n})\nconst total = input['Details'].reduce((val, next) => {\n\treturn val+next.price*next.qty\n}, 0)\nreturn {\n  bill_to: bill_to.join('\\n'),\n  from: from.join('\\n'),\n  details: details.join('\\n'),\n  total\n}"
+      },
+      "id": "ef6088f3-5e85-4fe2-a571-4cce0e10deef",
+      "name": "Preprocess",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1120,
+        180
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5342001f-a513-46c3-b31f-4590e8514411",
+              "name": "Invoice No",
+              "type": "string",
+              "value": "1"
+            },
+            {
+              "id": "ec357d39-c697-4bb8-8d9d-1bc303352dd0",
+              "name": "Bill To",
+              "type": "string",
+              "value": "John Doe\n1234 Elm St, Apt 567\nCity, Country, 12345"
+            },
+            {
+              "id": "88d6b470-4075-43ec-a684-a4adfd889278",
+              "name": "From",
+              "type": "string",
+              "value": "ABC Corporation\n789 Business Ave\nCity, Country, 67890"
+            },
+            {
+              "id": "061a8020-644a-4cec-bade-3bcd7e15adee",
+              "name": "Details",
+              "type": "array",
+              "value": "[     {         \"description\": \"Web Hosting\",         \"price\": 150,         \"qty\": 2     },     {         \"description\": \"Domain\",         \"price\": 15,         \"qty\": 5     } ]"
+            },
+            {
+              "id": "1c2c6c4b-6aa5-4656-8cae-43ffac71d478",
+              "name": "Email",
+              "type": "string",
+              "value": "support@mycompany.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8f28d118-60f3-42f8-a1be-ffc58b43424f",
+      "name": "Set data",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        900,
+        180
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "path": "526fd864-6f85-4cde-97aa-39b61a3e5b83",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "039005dd-f53a-4052-aed3-1a6156e379e0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        680,
+        180
+      ],
+      "webhookId": "526fd864-6f85-4cde-97aa-39b61a3e5b83",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {}
+      },
+      "id": "5d3d1e39-347b-4df1-ab74-580a9cf88767",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1540,
+        180
+      ],
+      "typeVersion": 1.1
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set data": {
+      "main": [
+        [
+          {
+            "node": "Preprocess",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "066e6c66-6053-4993-ad6c-205c64b849ae",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-04-07T07:12:38.812Z",
+      "createdAt": "2025-04-07T07:12:38.812Z",
+      "role": "workflow:owner",
+      "workflowId": "V7fquN5uCH0AuLgr",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
