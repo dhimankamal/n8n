@@ -1,0 +1,335 @@
+{
+  "updatedAt": "2025-12-31T08:27:05.647Z",
+  "createdAt": "2025-12-30T13:00:51.129Z",
+  "id": "KNyhHI2eYlMfdCZR",
+  "name": "Production Healthcare Outreach System For clousor",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "outreach",
+          "mode": "list",
+          "cachedResultName": "outreach"
+        },
+        "table": {
+          "__rl": true,
+          "value": "clients",
+          "mode": "list",
+          "cachedResultName": "clients"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "full_name": "kamal",
+            "email": "dhimank079@gmail.com"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "full_name",
+              "displayName": "full_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "role",
+              "displayName": "role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_website_url",
+              "displayName": "company_website_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "linkedin_profile_url",
+              "displayName": "linkedin_profile_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "linkedin_company_page_url",
+              "displayName": "linkedin_company_page_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "instagram_page_url",
+              "displayName": "instagram_page_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "facebook_page_url",
+              "displayName": "facebook_page_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone_number",
+              "displayName": "phone_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "whatsapp_number",
+              "displayName": "whatsapp_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        272
+      ],
+      "id": "9bfc2185-3012-4ad9-afce-f54aabb55bdb",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "NbNvcw9UWfa78S1E",
+          "name": "developer@clousor.com - healthcare outreach"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "outreach",
+          "mode": "list",
+          "cachedResultName": "outreach"
+        },
+        "table": {
+          "__rl": true,
+          "value": "clients",
+          "mode": "list",
+          "cachedResultName": "clients"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -16,
+        272
+      ],
+      "id": "78b23662-5b91-4654-8633-27419093ce8f",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "NbNvcw9UWfa78S1E",
+          "name": "developer@clousor.com - healthcare outreach"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Runs once for ALL items\nreturn items.map(item => {\n  const data = item.json;\n\n  // socials.instagram is an array → \"handle1,handle2\"\n  if (data.socials && Array.isArray(data.socials.instagram)) {\n    data.socials.instagram = data.socials.instagram.join(',');\n  }\n\n    if (data.socials && Array.isArray(data.socials.facebook)) {\n    data.socials.facebook = data.socials.facebook.join(',');\n  }\n\n      if (data.socials && Array.isArray(data.socials.linkedin)) {\n    data.socials.linkedin = data.socials.linkedin.join(',');\n  }\n\n        if (data.socials && Array.isArray(data.socials.twitter)) {\n    data.socials.twitter = data.socials.twitter.join(',');\n  }\n\n          if (data.socials && Array.isArray(data.socials.whatsapp)) {\n    data.socials.whatsapp = data.socials.whatsapp.join(',');\n  }\n\n  if (Array.isArray(data.emails)) {\n  data.emails = data.emails.join(',');\n}\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        0
+      ],
+      "id": "75d60c96-ca39-40fe-9057-51fc3971bcbe",
+      "name": "convert to string"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Run Once for All Items\n// Language: JavaScript\n\nconst uniq = (arr) => Array.from(new Set(arr));\n\n// Simple phone validator\n// • Cleans characters\n// • Enforces 10 to 15 digits\n// • If no + sign, assumes India and converts to +91XXXXXXXXXX\nfunction normalizeAndValidatePhone(raw) {\n  if (!raw) return null;\n\n  let s = String(raw).trim();\n  if (!s) return null;\n\n  // Remove tel: if still present\n  if (s.toLowerCase().startsWith(\"tel:\")) {\n    s = s.slice(4).trim();\n  }\n\n  // Keep only digits and +\n  s = s.replace(/[^\\d+]/g, \"\");\n\n  if (!s) return null;\n\n  // Convert leading 00 to +\n  if (s.startsWith(\"00\")) {\n    s = \"+\" + s.slice(2);\n  }\n\n  // + must only be at first char\n  if (s.indexOf(\"+\") > 0) {\n    return null;\n  }\n\n  // For length checks use digits only\n  const digits = s.replace(/\\D/g, \"\");\n  const len = digits.length;\n\n  // E164 style range\n  if (len < 10 || len > 15) {\n    return null;\n  }\n\n  // If there is no + sign, assume Indian mobile and force +91\n  if (!s.startsWith(\"+\")) {\n    const last10 = digits.slice(-10);\n\n    // Valid Indian mobile: 6,7,8,9 + 9 digits\n    if (!/^[6-9]\\d{9}$/.test(last10)) {\n      return null;\n    }\n\n    s = \"+91\" + last10;\n  }\n\n  return s;\n}\n\nconst results = [];\n\nfor (const item of $input.all()) {\n  const html =\n    item.json.data ||\n    item.json.body ||\n    item.json.html ||\n    item.json.content ||\n    \"\";\n\n  // 1) collect all hrefs\n  const hrefRegex = /<a\\b[^>]*href=[\"']([^\"']+)[\"'][^>]*>/gi;\n  const hrefs = [];\n  let m;\n  while ((m = hrefRegex.exec(html)) !== null) {\n    hrefs.push(m[1]);\n  }\n\n  const normalizeUrl = (url) => {\n    if (!url) return \"\";\n    if (url.startsWith(\"//\")) return \"https:\" + url;\n    return url.trim();\n  };\n\n  const socials = {\n    facebook: [],\n    instagram: [],\n    linkedin: [],\n    twitter: [],\n    youtube: [],\n    whatsapp: [],\n    other: [],\n  };\n\n  for (const rawHref of hrefs) {\n    const url = normalizeUrl(rawHref);\n    const lower = url.toLowerCase();\n\n    if (lower.includes(\"facebook.com\")) socials.facebook.push(url);\n    else if (lower.includes(\"instagram.com\")) socials.instagram.push(url);\n    else if (lower.includes(\"linkedin.com\")) socials.linkedin.push(url);\n    else if (lower.includes(\"x.com\") || lower.includes(\"twitter.com\")) socials.twitter.push(url);\n    else if (lower.includes(\"youtube.com\") || lower.includes(\"youtu.be\")) socials.youtube.push(url);\n    else if (lower.includes(\"wa.me\") || lower.includes(\"whatsapp.com\")) socials.whatsapp.push(url);\n    else socials.other.push(url);\n  }\n\n  // Make social links unique\n  Object.keys(socials).forEach((key) => {\n    socials[key] = uniq(socials[key]);\n  });\n\n  // 2) emails\n  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/g;\n  const emailMatches = html.match(emailRegex) || [];\n  const emails = uniq(emailMatches.map((e) => e.toLowerCase()));\n\n  // 3) phones\n\n  // 3a) From tel: links\n  const telFromHref = hrefs\n    .filter((h) => /^tel:/i.test(h))\n    .map((h) => h.replace(/^tel:/i, \"\"));\n\n  // 3b) From WhatsApp links (wa.me / whatsapp.com?phone=)\n  const waLinks = hrefs.filter((h) =>\n    /wa\\.me|whatsapp\\.com/i.test(h)\n  );\n\n  const phonesFromWa = [];\n\n  for (const url of waLinks) {\n    let matchPhonePath = url.match(/wa\\.me\\/(\\d+)/i);\n    if (matchPhonePath) {\n      phonesFromWa.push(matchPhonePath[1]);\n    }\n\n    let matchPhoneQuery = url.match(/[?&]phone=(\\d+)/i);\n    if (matchPhoneQuery) {\n      phonesFromWa.push(matchPhoneQuery[1]);\n    }\n  }\n\n  // Combine all raw phones\n  const allPhonesRaw = telFromHref.concat(phonesFromWa);\n\n  // Final cleaned and validated phones\n  const cleanedPhones = uniq(\n    allPhonesRaw\n      .map(normalizeAndValidatePhone)\n      .filter((p) => !!p)\n  );\n\n  results.push({\n    json: {\n      socials,\n      emails,\n      phones: cleanedPhones,\n    },\n  });\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        0
+      ],
+      "id": "dadfc370-501e-4319-8435-954680797c5d",
+      "name": "get social links"
+    },
+    {
+      "parameters": {
+        "url": "={{ \n  (() => {\n    const u = String($json.website || '').trim();\n    if (!u) return '';\n    if (u.startsWith('http://') || u.startsWith('https://')) return u;\n    return 'https://' + u;\n  })()\n}}\n",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "id": "3065d0c8-a4f8-469c-aea7-b27d71d6a46d",
+      "name": "GET Detail Form website",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -80,
+        0
+      ],
+      "typeVersion": 3,
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "get social links": {
+      "main": [
+        [
+          {
+            "node": "convert to string",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Detail Form website": {
+      "main": [
+        [
+          {
+            "node": "get social links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b4e6c082-b616-4d69-89eb-c52c7a402794",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-30T13:00:51.138Z",
+      "createdAt": "2025-12-30T13:00:51.138Z",
+      "role": "workflow:owner",
+      "workflowId": "KNyhHI2eYlMfdCZR",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
