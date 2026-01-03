@@ -1,0 +1,30 @@
+{
+  "updatedAt": "2026-01-03T15:40:06.067Z",
+  "createdAt": "2026-01-03T15:40:06.067Z",
+  "id": "Of1I3k7K31ubI1lV",
+  "name": "Waha Whatsapp Group Analyser",
+  "active": false,
+  "isArchived": false,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "9d4effcf-da41-45a9-9e13-e8be6b0a6de6",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-03T15:40:06.071Z",
+      "createdAt": "2026-01-03T15:40:06.071Z",
+      "role": "workflow:owner",
+      "workflowId": "Of1I3k7K31ubI1lV",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
