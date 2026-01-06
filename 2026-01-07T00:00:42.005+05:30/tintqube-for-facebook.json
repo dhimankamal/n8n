@@ -1,0 +1,1582 @@
+{
+  "updatedAt": "2025-12-21T09:52:46.942Z",
+  "createdAt": "2025-12-18T14:42:54.483Z",
+  "id": "JOo8M9GFSnRNZD38",
+  "name": "tintqube for facebook",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+          "mode": "list",
+          "cachedResultName": "tintqube",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "artvideo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        368
+      ],
+      "id": "beeb2882-d059-4eac-897f-71f50a897aec",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        464,
+        368
+      ],
+      "id": "51346d2a-aa3e-455f-90a5-2e0ad86e9c25",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "42930526-6f1e-4800-b96d-eedf912dbcb3",
+              "leftValue": "={{ $json.published_facebook.toBoolean() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        368
+      ],
+      "id": "1b5de61c-c673-4ede-9042-e3cbfed52956",
+      "name": "Filter"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        656
+      ],
+      "id": "7788efb4-b54c-43f0-b2a3-1dcbdebfc903",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Limit').item.json.DOWNLOAD_LINK }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1136,
+        368
+      ],
+      "id": "b48a8fd2-4389-4065-a3fd-e71551d7975b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Step 1: Initialize an Upload Session').first().json.body.upload_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "offset",
+              "value": "0"
+            },
+            {
+              "name": "file_size",
+              "value": "={{ $('Get the size file').first().json.actualSize }}"
+            },
+            {
+              "name": "=Authorization",
+              "value": "=OAuth {{ $('Get Page access token').item.json.data[0].access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "=data",
+        "options": {}
+      },
+      "id": "117c36f6-66b5-42ee-8c9a-3812d10ccfb5",
+      "name": "Step 2: Upload the Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1584,
+        368
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/934282989763328/video_reels",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "video_id",
+              "value": "={{ $('Step 1: Initialize an Upload Session').first().json.body.video_id }}"
+            },
+            {
+              "name": "upload_phase",
+              "value": "finish"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $('Get Page access token').item.json.data[0].access_token }}"
+            },
+            {
+              "name": "video_state",
+              "value": "PUBLISHED"
+            },
+            {
+              "name": "description",
+              "value": "={{ $('Limit').item.json.instagram_caption }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "d249a7ce-94dd-48df-9ee3-d32dc1f42123",
+      "name": "Step 3: Publish the Reel",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1808,
+        368
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const size = item.binary.data.fileSize;\n  const contentLength = Buffer.from(item.binary.data.data, 'base64').length;\n\n  item.json = {\n    declaredSize: size,\n    actualSize: contentLength\n  };\n\n  return item;\n});\n"
+      },
+      "id": "4efd1622-7fb5-4270-b3b7-3d7c42328ece",
+      "name": "Get the size file",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1360,
+        368
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/934282989763328/video_reels\n",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "upload_phase",
+              "value": "start"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $json.data[0].access_token }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "66a27f04-d192-4de6-9bc8-edda0338a6b1",
+      "name": "Step 1: Initialize an Upload Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        912,
+        368
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v23.0",
+        "node": "me",
+        "edge": "accounts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        688,
+        368
+      ],
+      "id": "4c19d07f-21f1-4134-899b-1d92eb4107e2",
+      "name": "Get Page access token",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "o6F0KO5TaEpULERl",
+          "name": "Facebook tintqube"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+          "mode": "list",
+          "cachedResultName": "tintqube",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "artvideo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "FILE_ID": "={{ $('Limit').item.json.FILE_ID }}",
+            "published_facebook": "TRUE"
+          },
+          "matchingColumns": [
+            "FILE_ID"
+          ],
+          "schema": [
+            {
+              "id": "FILE_ID",
+              "displayName": "FILE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "VIEW_LINK",
+              "displayName": "VIEW_LINK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "DOWNLOAD_LINK",
+              "displayName": "DOWNLOAD_LINK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "OPEN",
+              "displayName": "OPEN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "MIME_TYPE",
+              "displayName": "MIME_TYPE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "SIZE_BYTES",
+              "displayName": "SIZE_BYTES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CREATED_TIME",
+              "displayName": "CREATED_TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "MODIFIED_TIME",
+              "displayName": "MODIFIED_TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ANALYSIS",
+              "displayName": "ANALYSIS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "video_type",
+              "displayName": "video_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "primary_keyword",
+              "displayName": "primary_keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "secondary_keywords",
+              "displayName": "secondary_keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "youtube_title",
+              "displayName": "youtube_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "youtube_description",
+              "displayName": "youtube_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "youtube_tags",
+              "displayName": "youtube_tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "youtube_hashtags",
+              "displayName": "youtube_hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "instagram_caption",
+              "displayName": "instagram_caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "instagram_hashtags",
+              "displayName": "instagram_hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "notes_or_placeholders",
+              "displayName": "notes_or_placeholders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "published_youtube",
+              "displayName": "published_youtube",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "youtube_id",
+              "displayName": "youtube_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "published_instagram",
+              "displayName": "published_instagram",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cloudnary_url",
+              "displayName": "cloudnary_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "published_facebook",
+              "displayName": "published_facebook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2032,
+        368
+      ],
+      "id": "d31d20a4-7fbf-4fcd-9795-ea9f02aab334",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        80
+      ],
+      "id": "c604db87-823f-40a8-9f7d-bab38b969975",
+      "name": "8 AM"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 18
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        272
+      ],
+      "id": "cf84c117-7d4f-44fb-9a44-8409dc31242b",
+      "name": "6 PM"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        464
+      ],
+      "id": "0253834a-66c2-4cb6-9fd3-37a2504a8373",
+      "name": "12 AM"
+    }
+  ],
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Get Page access token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Get the size file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the size file": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Upload the Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 2: Upload the Video": {
+      "main": [
+        [
+          {
+            "node": "Step 3: Publish the Reel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 3: Publish the Reel": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 1: Initialize an Upload Session": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Page access token": {
+      "main": [
+        [
+          {
+            "node": "Step 1: Initialize an Upload Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 AM": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 PM": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 AM": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:8 AM": {
+      "recurrenceRules": []
+    },
+    "node:6 PM": {
+      "recurrenceRules": []
+    },
+    "node:12 AM": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d728aa8a-bc5a-4a6a-be50-8aba9f959ece",
+  "activeVersionId": "d728aa8a-bc5a-4a6a-be50-8aba9f959ece",
+  "triggerCount": 3,
+  "shared": [
+    {
+      "updatedAt": "2025-12-18T14:42:54.487Z",
+      "createdAt": "2025-12-18T14:42:54.487Z",
+      "role": "workflow:owner",
+      "workflowId": "JOo8M9GFSnRNZD38",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-21T09:46:19.518Z",
+    "createdAt": "2025-12-21T09:46:19.518Z",
+    "versionId": "d728aa8a-bc5a-4a6a-be50-8aba9f959ece",
+    "workflowId": "JOo8M9GFSnRNZD38",
+    "nodes": [
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+            "mode": "list",
+            "cachedResultName": "tintqube",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "artvideo",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          16,
+          368
+        ],
+        "id": "beeb2882-d059-4eac-897f-71f50a897aec",
+        "name": "Get row(s) in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "contact.itskamal Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          464,
+          368
+        ],
+        "id": "51346d2a-aa3e-455f-90a5-2e0ad86e9c25",
+        "name": "Limit"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "42930526-6f1e-4800-b96d-eedf912dbcb3",
+                "leftValue": "={{ $json.published_facebook.toBoolean() }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.3,
+        "position": [
+          240,
+          368
+        ],
+        "id": "1b5de61c-c673-4ede-9042-e3cbfed52956",
+        "name": "Filter"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -208,
+          656
+        ],
+        "id": "7788efb4-b54c-43f0-b2a3-1dcbdebfc903",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Limit').item.json.DOWNLOAD_LINK }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1136,
+          368
+        ],
+        "id": "b48a8fd2-4389-4065-a3fd-e71551d7975b",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('Step 1: Initialize an Upload Session').first().json.body.upload_url }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "offset",
+                "value": "0"
+              },
+              {
+                "name": "file_size",
+                "value": "={{ $('Get the size file').first().json.actualSize }}"
+              },
+              {
+                "name": "=Authorization",
+                "value": "=OAuth {{ $('Get Page access token').item.json.data[0].access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "binaryData",
+          "inputDataFieldName": "=data",
+          "options": {}
+        },
+        "id": "117c36f6-66b5-42ee-8c9a-3812d10ccfb5",
+        "name": "Step 2: Upload the Video",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          1584,
+          368
+        ],
+        "typeVersion": 4.2
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://graph.facebook.com/v23.0/934282989763328/video_reels",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "video_id",
+                "value": "={{ $('Step 1: Initialize an Upload Session').first().json.body.video_id }}"
+              },
+              {
+                "name": "upload_phase",
+                "value": "finish"
+              },
+              {
+                "name": "access_token",
+                "value": "={{ $('Get Page access token').item.json.data[0].access_token }}"
+              },
+              {
+                "name": "video_state",
+                "value": "PUBLISHED"
+              },
+              {
+                "name": "description",
+                "value": "={{ $('Limit').item.json.instagram_caption }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "id": "d249a7ce-94dd-48df-9ee3-d32dc1f42123",
+        "name": "Step 3: Publish the Reel",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          1808,
+          368
+        ],
+        "typeVersion": 4.2
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n  const size = item.binary.data.fileSize;\n  const contentLength = Buffer.from(item.binary.data.data, 'base64').length;\n\n  item.json = {\n    declaredSize: size,\n    actualSize: contentLength\n  };\n\n  return item;\n});\n"
+        },
+        "id": "4efd1622-7fb5-4270-b3b7-3d7c42328ece",
+        "name": "Get the size file",
+        "type": "n8n-nodes-base.code",
+        "position": [
+          1360,
+          368
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://graph.facebook.com/v23.0/934282989763328/video_reels\n",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "upload_phase",
+                "value": "start"
+              },
+              {
+                "name": "access_token",
+                "value": "={{ $json.data[0].access_token }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "id": "66a27f04-d192-4de6-9bc8-edda0338a6b1",
+        "name": "Step 1: Initialize an Upload Session",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          912,
+          368
+        ],
+        "executeOnce": true,
+        "typeVersion": 4.2
+      },
+      {
+        "parameters": {
+          "graphApiVersion": "v23.0",
+          "node": "me",
+          "edge": "accounts",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.facebookGraphApi",
+        "typeVersion": 1,
+        "position": [
+          688,
+          368
+        ],
+        "id": "4c19d07f-21f1-4134-899b-1d92eb4107e2",
+        "name": "Get Page access token",
+        "credentials": {
+          "facebookGraphApi": {
+            "id": "o6F0KO5TaEpULERl",
+            "name": "Facebook tintqube"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk",
+            "mode": "list",
+            "cachedResultName": "tintqube",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "artvideo",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iUE9JOqRAKoxwsFilYfPxiETZSTqTB4VbaNnMjPngBk/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "FILE_ID": "={{ $('Limit').item.json.FILE_ID }}",
+              "published_facebook": "TRUE"
+            },
+            "matchingColumns": [
+              "FILE_ID"
+            ],
+            "schema": [
+              {
+                "id": "FILE_ID",
+                "displayName": "FILE_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "NAME",
+                "displayName": "NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "VIEW_LINK",
+                "displayName": "VIEW_LINK",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "DOWNLOAD_LINK",
+                "displayName": "DOWNLOAD_LINK",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "OPEN",
+                "displayName": "OPEN",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "MIME_TYPE",
+                "displayName": "MIME_TYPE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "SIZE_BYTES",
+                "displayName": "SIZE_BYTES",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "CREATED_TIME",
+                "displayName": "CREATED_TIME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "MODIFIED_TIME",
+                "displayName": "MODIFIED_TIME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "ANALYSIS",
+                "displayName": "ANALYSIS",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "video_type",
+                "displayName": "video_type",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "primary_keyword",
+                "displayName": "primary_keyword",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "secondary_keywords",
+                "displayName": "secondary_keywords",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "youtube_title",
+                "displayName": "youtube_title",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "youtube_description",
+                "displayName": "youtube_description",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "youtube_tags",
+                "displayName": "youtube_tags",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "youtube_hashtags",
+                "displayName": "youtube_hashtags",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "instagram_caption",
+                "displayName": "instagram_caption",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "instagram_hashtags",
+                "displayName": "instagram_hashtags",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "notes_or_placeholders",
+                "displayName": "notes_or_placeholders",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "published_youtube",
+                "displayName": "published_youtube",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "youtube_id",
+                "displayName": "youtube_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "published_instagram",
+                "displayName": "published_instagram",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "cloudnary_url",
+                "displayName": "cloudnary_url",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "published_facebook",
+                "displayName": "published_facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          2032,
+          368
+        ],
+        "id": "d31d20a4-7fbf-4fcd-9795-ea9f02aab334",
+        "name": "Update row in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "contact.itskamal Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 8
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -208,
+          80
+        ],
+        "id": "c604db87-823f-40a8-9f7d-bab38b969975",
+        "name": "8 AM"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 18
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -208,
+          272
+        ],
+        "id": "cf84c117-7d4f-44fb-9a44-8409dc31242b",
+        "name": "6 PM"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 12
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -208,
+          464
+        ],
+        "id": "0253834a-66c2-4cb6-9fd3-37a2504a8373",
+        "name": "12 AM"
+      }
+    ],
+    "connections": {
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limit": {
+        "main": [
+          [
+            {
+              "node": "Get Page access token",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "Limit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Get the size file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get the size file": {
+        "main": [
+          [
+            {
+              "node": "Step 2: Upload the Video",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 2: Upload the Video": {
+        "main": [
+          [
+            {
+              "node": "Step 3: Publish the Reel",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 3: Publish the Reel": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 1: Initialize an Upload Session": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Page access token": {
+        "main": [
+          [
+            {
+              "node": "Step 1: Initialize an Upload Session",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "8 AM": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "6 PM": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "12 AM": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Clourax Clourax",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
