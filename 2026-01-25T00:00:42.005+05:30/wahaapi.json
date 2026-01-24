@@ -1,0 +1,129 @@
+{
+  "updatedAt": "2025-12-13T03:44:07.235Z",
+  "createdAt": "2025-12-11T17:31:20.896Z",
+  "id": "5vXlYjMnt7yfUxPp",
+  "name": "WAHAAPI",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "http://194.164.150.195:4000/api/default/groups?limit=50&offset=0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "6e699eb45e024867b3fb5f563a44f0be"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -176,
+        -96
+      ],
+      "id": "c4df7ede-8e5a-47a2-bae4-870584912a5c",
+      "name": "Get Groups"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://194.164.150.195:4000/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "6e699eb45e024867b3fb5f563a44f0be"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"session\": \"default\",\n  \"chatId\": \"919781452072@c.us\",\n  \"text\": \"Hi there! I am kamal clousor\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -176,
+        128
+      ],
+      "id": "bed22065-dbb4-4497-8a90-d3562a3154f3",
+      "name": "SENDSIMPLEMESSAGE"
+    },
+    {
+      "parameters": {
+        "url": "http://194.164.150.195:4000/api/default/groups?limit=50&offset=0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "6e699eb45e024867b3fb5f563a44f0be"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -176,
+        352
+      ],
+      "id": "ce6aec3d-7b3c-4651-ab9e-3811c4efe770",
+      "name": "Get Groups1"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "=default",
+        "chatId": "=120363421751537057@g.us",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        -176,
+        576
+      ],
+      "id": "a9366ded-c6c8-49f0-b6b9-ba4c257f18f7",
+      "name": "Send a text message",
+      "credentials": {
+        "wahaApi": {
+          "id": "Ydpm9rWYmvpQEcpR",
+          "name": "Business whatsapp"
+        }
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "69808cde-141c-4ad8-843f-1de4b6e85b37",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-11T17:31:20.909Z",
+      "createdAt": "2025-12-11T17:31:20.909Z",
+      "role": "workflow:owner",
+      "workflowId": "5vXlYjMnt7yfUxPp",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
