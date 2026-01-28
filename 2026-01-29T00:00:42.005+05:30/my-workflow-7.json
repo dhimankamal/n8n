@@ -1,0 +1,126 @@
+{
+  "updatedAt": "2025-08-27T08:04:16.000Z",
+  "createdAt": "2025-08-09T03:34:32.441Z",
+  "id": "SXXtkYUHDyeXZJxB",
+  "name": "My workflow 7",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "name": "WhatsApp Msg",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "2168ab4d-6223-48ca-a31e-11be32853380",
+      "webhookId": "e6db6651-e6a6-446d-aaad-8ff126010e87",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "xrA71QVvLSRL9BKe",
+          "name": "WhatsApp OAuth account MEM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const from = $json.messages[0].from;\nconst data = this.getWorkflowStaticData('global');\n\nif (!data[from]) data[from] = { step: 0 };\nconst state = data[from];\nconst text = $json.messages[0].text.body.trim();\nlet reply;\n\n// reset flow at any time\nif (text.toLowerCase() === 'reset') {\n  state.step = 1;\n  reply = \"No problem! Let's start again.\\nPlease reply with your Full Name:\";\n} else {\n  switch (state.step) {\n    case 0:\n      if (text.toLowerCase() === 'complaint') {\n        reply = \"Thank you for reaching out! Let's file your complaint.\\nPlease reply with your Full Name:\";\n        state.step = 1;\n      } else {\n        return [];\n      }\n      break;\n    case 1:\n      state.name = text;\n      reply = '2. Phone Number:';\n      state.step = 2;\n      break;\n    case 2:\n      if (!/^((\\+91)?\\s?\\d{10})$/.test(text)) {\n        reply = '2. Phone is invalid, please enter your phone number again:';\n      } else {\n        state.phone = text;\n        reply = '3. Location (address or area):';\n        state.step = 3;\n      }\n      break;\n    case 3:\n      state.location = text;\n      reply = '4. Please describe the issue in brief:';\n      state.step = 4;\n      break;\n    case 4:\n      state.issue = text;\n      const complaintId = `C-${Math.floor(1000 + Math.random() * 9000)}`;\n      reply = `Thank you! Your complaint ID is ${complaintId}. We have marked it as Pending.`;\n      state.step = 0;\n      break;\n  }\n}\n\nreturn [{ json: { output: reply } }];\n"
+      },
+      "name": "Conversation Logic",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        80,
+        0
+      ],
+      "id": "d1bdcb0f-986a-4f61-83f9-1e856252f227"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "505140649353735",
+        "recipientPhoneNumber": "=+91 9914817311",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Business Cloud",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        340,
+        0
+      ],
+      "id": "0c97ca52-cc77-4255-a038-d10d3f4f3c74",
+      "webhookId": "d372fba1-4bf4-4449-a410-f361d1d9fb6a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ntI5nwJltGiM2tTa",
+          "name": "WhatsApp account 2 MEMANTRA w Access Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WhatsApp Msg": {
+      "main": [
+        [
+          {
+            "node": "Conversation Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Logic": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Business Cloud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "919914817311": {
+        "step": 2,
+        "name": "Complaint",
+        "phone": "9914817311",
+        "location": "Nabha",
+        "issue": "My ac is not working"
+      }
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "60006215-876d-4d82-9531-60440b9881d2",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-08-09T03:34:32.449Z",
+      "createdAt": "2025-08-09T03:34:32.449Z",
+      "role": "workflow:owner",
+      "workflowId": "SXXtkYUHDyeXZJxB",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
