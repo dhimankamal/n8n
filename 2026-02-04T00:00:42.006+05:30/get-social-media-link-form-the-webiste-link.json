@@ -1,0 +1,374 @@
+{
+  "updatedAt": "2025-12-29T14:48:57.267Z",
+  "createdAt": "2025-11-25T16:35:44.328Z",
+  "id": "3nrSPTeLfJIRxzv9",
+  "name": "Get Social media link form the webiste link",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{ \n  (() => {\n    const u = String($json.website || '').trim();\n    if (!u) return '';\n    if (u.startsWith('http://') || u.startsWith('https://')) return u;\n    return 'https://' + u;\n  })()\n}}\n",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "id": "d71cfb4f-9a46-46d2-b7f6-0f6d3dec6d13",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1200,
+        208
+      ],
+      "typeVersion": 3,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        304,
+        280
+      ],
+      "id": "adbdf2c6-4ac3-40d3-b6bd-1d46903a9ee8",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ecJWV87hHOLsqyK91SDuIRR15Ta6ZDZ4WWZ0RWnnZ-A",
+          "mode": "list",
+          "cachedResultName": "OUTREACH USA HEALTHCARE",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ecJWV87hHOLsqyK91SDuIRR15Ta6ZDZ4WWZ0RWnnZ-A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 870901899,
+          "mode": "list",
+          "cachedResultName": "Med Spa Scottsdale AZ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ecJWV87hHOLsqyK91SDuIRR15Ta6ZDZ4WWZ0RWnnZ-A/edit#gid=870901899"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        280
+      ],
+      "id": "6b3c60da-f22d-4a32-b6f7-e52997f0b8da",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        976,
+        280
+      ],
+      "id": "8c957fb8-8709-4292-8f47-edf3e8adbeed",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ecJWV87hHOLsqyK91SDuIRR15Ta6ZDZ4WWZ0RWnnZ-A",
+          "mode": "list",
+          "cachedResultName": "OUTREACH USA HEALTHCARE",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ecJWV87hHOLsqyK91SDuIRR15Ta6ZDZ4WWZ0RWnnZ-A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 870901899,
+          "mode": "list",
+          "cachedResultName": "Med Spa Scottsdale AZ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ecJWV87hHOLsqyK91SDuIRR15Ta6ZDZ4WWZ0RWnnZ-A/edit#gid=870901899"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "website": "={{ $('Loop Over Items').item.json.website }}",
+            "facebook": "={{ $json.socials.facebook }}",
+            "instagram": "={{ $json.socials.instagram }}",
+            "number": "={{ $json.phones }}",
+            "linkedin": "={{ $json.socials.linkedin }}"
+          },
+          "matchingColumns": [
+            "website"
+          ],
+          "schema": [
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "instagram",
+              "displayName": "instagram",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "facebook",
+              "displayName": "facebook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "linkedin",
+              "displayName": "linkedin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1872,
+        208
+      ],
+      "id": "58b60c40-426c-4e5d-9779-82f1626522b5",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2096,
+        280
+      ],
+      "id": "f6675253-4898-4405-9dce-f14cfb4ebc6c",
+      "name": "Wait",
+      "webhookId": "8fc16f13-baec-4ef4-a833-72f1c7b34a89"
+    },
+    {
+      "parameters": {
+        "maxItems": 200
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        752,
+        280
+      ],
+      "id": "61300cea-2837-4788-80cc-a659d39d7ace",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Runs once for ALL items\nreturn items.map(item => {\n  const data = item.json;\n\n  // socials.instagram is an array → \"handle1,handle2\"\n  if (data.socials && Array.isArray(data.socials.instagram)) {\n    data.socials.instagram = data.socials.instagram.join(',');\n  }\n\n    if (data.socials && Array.isArray(data.socials.facebook)) {\n    data.socials.facebook = data.socials.facebook.join(',');\n  }\n\n      if (data.socials && Array.isArray(data.socials.linkedin)) {\n    data.socials.linkedin = data.socials.linkedin.join(',');\n  }\n\n        if (data.socials && Array.isArray(data.socials.twitter)) {\n    data.socials.twitter = data.socials.twitter.join(',');\n  }\n\n          if (data.socials && Array.isArray(data.socials.whatsapp)) {\n    data.socials.whatsapp = data.socials.whatsapp.join(',');\n  }\n\n  if (Array.isArray(data.emails)) {\n  data.emails = data.emails.join(',');\n}\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        208
+      ],
+      "id": "a9689668-ce40-4e49-ab6e-e393542414db",
+      "name": "convert to string"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Run Once for All Items\n// Language: JavaScript\n\nconst uniq = (arr) => Array.from(new Set(arr));\n\n// Simple phone validator\n// • Cleans characters\n// • Enforces 10 to 15 digits\n// • If no + sign, assumes India and converts to +91XXXXXXXXXX\nfunction normalizeAndValidatePhone(raw) {\n  if (!raw) return null;\n\n  let s = String(raw).trim();\n  if (!s) return null;\n\n  // Remove tel: if still present\n  if (s.toLowerCase().startsWith(\"tel:\")) {\n    s = s.slice(4).trim();\n  }\n\n  // Keep only digits and +\n  s = s.replace(/[^\\d+]/g, \"\");\n\n  if (!s) return null;\n\n  // Convert leading 00 to +\n  if (s.startsWith(\"00\")) {\n    s = \"+\" + s.slice(2);\n  }\n\n  // + must only be at first char\n  if (s.indexOf(\"+\") > 0) {\n    return null;\n  }\n\n  // For length checks use digits only\n  const digits = s.replace(/\\D/g, \"\");\n  const len = digits.length;\n\n  // E164 style range\n  if (len < 10 || len > 15) {\n    return null;\n  }\n\n  // If there is no + sign, assume Indian mobile and force +91\n  if (!s.startsWith(\"+\")) {\n    const last10 = digits.slice(-10);\n\n    // Valid Indian mobile: 6,7,8,9 + 9 digits\n    if (!/^[6-9]\\d{9}$/.test(last10)) {\n      return null;\n    }\n\n    s = \"+91\" + last10;\n  }\n\n  return s;\n}\n\nconst results = [];\n\nfor (const item of $input.all()) {\n  const html =\n    item.json.data ||\n    item.json.body ||\n    item.json.html ||\n    item.json.content ||\n    \"\";\n\n  // 1) collect all hrefs\n  const hrefRegex = /<a\\b[^>]*href=[\"']([^\"']+)[\"'][^>]*>/gi;\n  const hrefs = [];\n  let m;\n  while ((m = hrefRegex.exec(html)) !== null) {\n    hrefs.push(m[1]);\n  }\n\n  const normalizeUrl = (url) => {\n    if (!url) return \"\";\n    if (url.startsWith(\"//\")) return \"https:\" + url;\n    return url.trim();\n  };\n\n  const socials = {\n    facebook: [],\n    instagram: [],\n    linkedin: [],\n    twitter: [],\n    youtube: [],\n    whatsapp: [],\n    other: [],\n  };\n\n  for (const rawHref of hrefs) {\n    const url = normalizeUrl(rawHref);\n    const lower = url.toLowerCase();\n\n    if (lower.includes(\"facebook.com\")) socials.facebook.push(url);\n    else if (lower.includes(\"instagram.com\")) socials.instagram.push(url);\n    else if (lower.includes(\"linkedin.com\")) socials.linkedin.push(url);\n    else if (lower.includes(\"x.com\") || lower.includes(\"twitter.com\")) socials.twitter.push(url);\n    else if (lower.includes(\"youtube.com\") || lower.includes(\"youtu.be\")) socials.youtube.push(url);\n    else if (lower.includes(\"wa.me\") || lower.includes(\"whatsapp.com\")) socials.whatsapp.push(url);\n    else socials.other.push(url);\n  }\n\n  // Make social links unique\n  Object.keys(socials).forEach((key) => {\n    socials[key] = uniq(socials[key]);\n  });\n\n  // 2) emails\n  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/g;\n  const emailMatches = html.match(emailRegex) || [];\n  const emails = uniq(emailMatches.map((e) => e.toLowerCase()));\n\n  // 3) phones\n\n  // 3a) From tel: links\n  const telFromHref = hrefs\n    .filter((h) => /^tel:/i.test(h))\n    .map((h) => h.replace(/^tel:/i, \"\"));\n\n  // 3b) From WhatsApp links (wa.me / whatsapp.com?phone=)\n  const waLinks = hrefs.filter((h) =>\n    /wa\\.me|whatsapp\\.com/i.test(h)\n  );\n\n  const phonesFromWa = [];\n\n  for (const url of waLinks) {\n    let matchPhonePath = url.match(/wa\\.me\\/(\\d+)/i);\n    if (matchPhonePath) {\n      phonesFromWa.push(matchPhonePath[1]);\n    }\n\n    let matchPhoneQuery = url.match(/[?&]phone=(\\d+)/i);\n    if (matchPhoneQuery) {\n      phonesFromWa.push(matchPhoneQuery[1]);\n    }\n  }\n\n  // Combine all raw phones\n  const allPhonesRaw = telFromHref.concat(phonesFromWa);\n\n  // Final cleaned and validated phones\n  const cleanedPhones = uniq(\n    allPhonesRaw\n      .map(normalizeAndValidatePhone)\n      .filter((p) => !!p)\n  );\n\n  results.push({\n    json: {\n      socials,\n      emails,\n      phones: cleanedPhones,\n    },\n  });\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        208
+      ],
+      "id": "ca771e45-95fe-4d79-bd91-3d3f00c7b521",
+      "name": "get social links"
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "get social links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert to string": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get social links": {
+      "main": [
+        [
+          {
+            "node": "convert to string",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "34f1890c-05fe-42bd-a719-d32485308b5a",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-25T16:35:44.330Z",
+      "createdAt": "2025-11-25T16:35:44.330Z",
+      "role": "workflow:owner",
+      "workflowId": "3nrSPTeLfJIRxzv9",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
