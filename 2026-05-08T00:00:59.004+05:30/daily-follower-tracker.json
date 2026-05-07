@@ -1,0 +1,414 @@
+{
+  "updatedAt": "2025-09-07T10:53:24.000Z",
+  "createdAt": "2025-04-14T18:00:43.148Z",
+  "id": "2kJkGr5ht5w3gyTk",
+  "name": "Daily Follower Tracker",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 12
+            }
+          ]
+        }
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        288,
+        240
+      ],
+      "id": "b037531d-9d53-4d96-8d4a-7398e5246881"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1eoA2toaF4BCVfaswQMa10_1SXDIbbIv7b6OiCditx5Y",
+          "mode": "list",
+          "cachedResultName": "Atul Madaan Follower Count",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eoA2toaF4BCVfaswQMa10_1SXDIbbIv7b6OiCditx5Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "followers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eoA2toaF4BCVfaswQMa10_1SXDIbbIv7b6OiCditx5Y/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Count": "={{ $json.followersCount }}",
+            "Media": "={{ $json.postsCount }}",
+            "Date": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Count",
+              "displayName": "Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Media",
+              "displayName": "Media",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Daily Icrease",
+              "displayName": "Daily Icrease",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        880,
+        320
+      ],
+      "id": "05c0a657-e7f8-4378-9e7e-eda34e339042",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08M07QTQ77",
+          "mode": "list",
+          "cachedResultName": "test"
+        },
+        "text": "=Here is flower instagram {{ $json.username }}\n\nTotal Follower - {{ $json.followersCount }}\n",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        96
+      ],
+      "id": "1f0dddb7-a6c7-454a-9113-02c7c6d97a71",
+      "name": "Slack",
+      "webhookId": "d38a76f6-bd78-495e-afb3-56401dbb9804",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Slack account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"usernames\": [\n        \"dratul_autismexpert\"\n    ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        240
+      ],
+      "id": "378b9e0d-6544-428e-98c6-f65fdff387e1",
+      "name": "HTTP Request",
+      "credentials": {
+        "apifyApi": {
+          "id": "hWYBNfIoczeK6lb3",
+          "name": "Kamal Apify account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "c6e1f7b7-69ca-4d29-89c9-a3f4ea0eac79",
+  "activeVersionId": "c6e1f7b7-69ca-4d29-89c9-a3f4ea0eac79",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-04-14T18:00:43.152Z",
+      "createdAt": "2025-04-14T18:00:43.152Z",
+      "role": "workflow:owner",
+      "workflowId": "2kJkGr5ht5w3gyTk",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-09T04:19:59.572Z",
+    "createdAt": "2025-12-09T04:19:59.572Z",
+    "versionId": "c6e1f7b7-69ca-4d29-89c9-a3f4ea0eac79",
+    "workflowId": "2kJkGr5ht5w3gyTk",
+    "nodes": [
+      {
+        "parameters": {
+          "triggerTimes": {
+            "item": [
+              {
+                "hour": 12
+              }
+            ]
+          }
+        },
+        "name": "Cron",
+        "type": "n8n-nodes-base.cron",
+        "typeVersion": 1,
+        "position": [
+          288,
+          240
+        ],
+        "id": "b037531d-9d53-4d96-8d4a-7398e5246881"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1eoA2toaF4BCVfaswQMa10_1SXDIbbIv7b6OiCditx5Y",
+            "mode": "list",
+            "cachedResultName": "Atul Madaan Follower Count",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eoA2toaF4BCVfaswQMa10_1SXDIbbIv7b6OiCditx5Y/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "followers",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eoA2toaF4BCVfaswQMa10_1SXDIbbIv7b6OiCditx5Y/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Count": "={{ $json.followersCount }}",
+              "Media": "={{ $json.postsCount }}",
+              "Date": "={{ $now }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Count",
+                "displayName": "Count",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Media",
+                "displayName": "Media",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Date",
+                "displayName": "Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Daily Icrease",
+                "displayName": "Daily Icrease",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          880,
+          320
+        ],
+        "id": "05c0a657-e7f8-4378-9e7e-eda34e339042",
+        "name": "Google Sheets",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "select": "channel",
+          "channelId": {
+            "__rl": true,
+            "value": "C08M07QTQ77",
+            "mode": "list",
+            "cachedResultName": "test"
+          },
+          "text": "=Here is flower instagram {{ $json.username }}\n\nTotal Follower - {{ $json.followersCount }}\n",
+          "otherOptions": {}
+        },
+        "type": "n8n-nodes-base.slack",
+        "typeVersion": 2.3,
+        "position": [
+          880,
+          96
+        ],
+        "id": "1f0dddb7-a6c7-454a-9113-02c7c6d97a71",
+        "name": "Slack",
+        "webhookId": "d38a76f6-bd78-495e-afb3-56401dbb9804",
+        "credentials": {
+          "slackApi": {
+            "id": "2LlRRGmYe6uTO8Xv",
+            "name": "Slack account 7"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "apifyApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n    \"usernames\": [\n        \"dratul_autismexpert\"\n    ]\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          576,
+          240
+        ],
+        "id": "378b9e0d-6544-428e-98c6-f65fdff387e1",
+        "name": "HTTP Request",
+        "credentials": {
+          "apifyApi": {
+            "id": "hWYBNfIoczeK6lb3",
+            "name": "Kamal Apify account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Cron": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Google Sheets",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Slack",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
