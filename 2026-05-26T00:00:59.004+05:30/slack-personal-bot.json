@@ -1,0 +1,30 @@
+{
+  "updatedAt": "2025-08-27T08:05:50.000Z",
+  "createdAt": "2025-04-09T09:57:02.915Z",
+  "id": "OoWIlCgVMQjcWjwa",
+  "name": "SLACK PERSONAL BOT",
+  "active": false,
+  "isArchived": true,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "dc253249-dcde-4a64-9295-6acf9e812502",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-04-09T09:57:02.923Z",
+      "createdAt": "2025-04-09T09:57:02.923Z",
+      "role": "workflow:owner",
+      "workflowId": "OoWIlCgVMQjcWjwa",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
