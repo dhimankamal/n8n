@@ -1,0 +1,3318 @@
+{
+  "updatedAt": "2025-10-27T10:16:44.000Z",
+  "createdAt": "2025-09-24T09:01:19.203Z",
+  "id": "DPs6wMWOzZrwOu3P",
+  "name": "Lixium-dev-bot-whatsapp",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "={{'Thank you, ' + $json.data.fullName + '!  \\nYour complaint (C-'+ $json.data.id + ') has been recieved.'}}",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Ticket Reply",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1632,
+        -928
+      ],
+      "id": "b815f734-0509-48f0-a501-a49463dfb8bf",
+      "webhookId": "eac50822-3f76-49e0-b630-1fbfa5f3e0f3",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://77f497222def.ngrok-free.app/api/complaint/create",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fullName\": \"{{ $json.name }}\",\n  \"phone\": \"{{ $('WhatsApp Msg').item.json.messages[0].from }}\",\n  \"longitude\": {{ $json.longitude }},\n  \"latitude\": {{ $json.latitude }},\n  \"description\": \"{{ $json.description }}\",\n\"otherNumber\":\"{{ $('Conversation Logic').item.json.phone }}\"\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "name": "HTTP Request Create Complaint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2080,
+        -1024
+      ],
+      "id": "505fa173-ea1c-4172-9cb8-b4fd90fdcaef"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.sendToApi}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "IF Send to API?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        -928
+      ],
+      "id": "7ac31b84-d01b-4018-a244-0d3ca15f2a18"
+    },
+    {
+      "parameters": {
+        "functionCode": "try {\n  const incomingMessages = $json && $json.messages ? $json.messages : null;\n  if (!incomingMessages || !incomingMessages.length) {\n    return [];\n  }\n\n  const from = incomingMessages[0].from;\n  const data = this.getWorkflowStaticData(\"global\");\n\n  if (!data[from]) {\n    data[from] = { step: 0 };\n  }\n\n  const state = data[from];\n  const text =\n    incomingMessages[0]?.text && incomingMessages[0]?.text?.body\n      ? incomingMessages[0].text.body.trim()\n      : \"\";\n  let reply;\n\n  // --- HELP KEYWORDS ---\n  const helpKeywords = [\"help\", \"support\", \"assist\", \"how\", \"help me\"];\n  if (helpKeywords.includes(text.toLowerCase())) {\n    const helpMsg = `📋 How to file a complaint:\n                  1. Type the word *complaint* to start.\n                  2. We’ll ask for your Full Name.\n                  3. Your Location (address or area).\n                  4. A brief description of the issue.\n\n                  At any time, you can type *reset* to start over.`;\n    return [{ json: { output: helpMsg, sendToApi: false, from: from } }];\n  }\n\n  // --- RESET FLOW ---\n  if (text.toLowerCase() === \"reset\") {\n    if (data?.[from]) {\n      delete data[from];\n    }\n    reply = \"No problem! Let's start over. Please type *complaint* to begin.\";\n    return [{ json: { output: reply, sendToApi: false, from: from } }];\n  }\n\n\n  switch (state.step) {\n    case 0:\n      if (text.toLowerCase() === 'complaint') {\n        reply = \"Thank you for reaching out! Let's file your complaint.\\nPlease reply with your Full Name (only alphabets and spaces):\";\n        state.step = 1;\n      }  else {\n        reply = \"Hi there! 👋 You can start by typing the word 'complaint'.\\nThis will begin the process to file your issue step-by-step.\";\n      }\n      break;\n\n    case 1: // Name\n      if (!/^[a-zA-Z\\s]+$/.test(text) || text.length < 3) {\n        reply = '❌ Invalid name format.\\n✅ Please enter your Full Name (only alphabets and spaces, at least 3 characters).';\n      } else {\n        state.name = text;\n        reply = '2️⃣ Please enter your Phone Number (10 digits only):';\n        state.step = 2;\n      }\n      break;\n\n    case 2: // Phone\n      if (!/^\\d{10}$/.test(text.replace(/\\s+/g, ''))) {\n        reply = '❌ Invalid phone number.\\n✅ Please enter a 10-digit number without spaces or special characters (e.g., 9876543210).';\n      } else {\n        state.phone = text.replace(/\\s+/g, '');\n        reply = '3️⃣ Please share your Location(from the location share feature.) or send *NA* if you don\\'t wanna share your location:';\n        state.step = 3;\n      }\n      break;\n\n    case 3: // Location'\n       if(incomingMessages[0].type==\"text\" && text===\"NA\"){\n          reply = '4️⃣ Please describe the issue (5–500 characters):';\n          state.latitude = 0;\n        state.longitude = 0;\n        state.step = 4;\n\n      }else if(incomingMessages[0].type!==\"location\"){\n         reply = '❌ Invalid location.\\n✅ Please share the location via location share feature of Whatsapp or send *NA* if you don\\'t wanna share your location.';\n      }else {\n\n       const latitude = incomingMessages[0].location.latitude\n        const longitude = incomingMessages[0].location.longitude\n        state.latitude = latitude;\n        state.longitude = longitude;\n        reply = '4️⃣ Please describe the issue (5–500 characters):';\n        state.step = 4;\n      }\n      break;\n\n    case 4: // Issue\n      if (text.length < 5 || text.length > 500) {\n        reply = '❌ Invalid description.\\n✅ Please provide a brief description of the issue (between 5 and 500 characters).';\n      } else {\n        state.issue = text;\n        state.step = 0;\n        return [{\n          json: {\n            sendToApi: true,\n            name: state.name,\n            phone: state.phone,\n            latitude:state.latitude,\n            longitude: state.longitude,\n            description: state.issue,\n            from: from\n          }\n        }];\n      }\n      break;\n\n    default:\n      state.step = 0;\n      reply = \"I'm sorry, something went wrong. Let's start over. Please type 'complaint' to begin.\";\n      break;\n  }\n  \n\n  return [{ json: { output: reply, sendToApi: false, from: from } }];\n} catch (error) {\n  console.log(\"error\",error.message)\n  const from =\n    $json && $json.messages && $json.messages[0]\n      ? $json.messages[0].from\n      : null;\n  const reply = \"Sorry, an unexpected error occurred. Please try again later.\";\n  return [{ json: { output: reply, sendToApi: false, from: from } }];\n}\n"
+      },
+      "name": "Conversation Logic",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -2528,
+        -928
+      ],
+      "id": "8d22d86a-ed0a-4d53-8f25-a06970a72d6f"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "name": "WhatsApp Msg",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2528,
+        -416
+      ],
+      "id": "fd5e699c-9dc2-41ec-bb84-b382ee217d74",
+      "webhookId": "17573b51-82cb-49a5-b314-8e5bc89670a1",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "OQYuafGhokpzDKFI",
+          "name": "Lixium-Dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "={{$json.output}}",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Reply (Mid-Step)",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2080,
+        -832
+      ],
+      "id": "949fa329-fb42-46a9-999f-daae67931b54",
+      "webhookId": "4483e476-3dd4-418f-9876-f3566fca486b",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "complaint-closed",
+        "options": {}
+      },
+      "id": "82ba13ad-b90a-4cf3-92c7-2dc3b5974029",
+      "name": "Webhook Trigger - Complaint Closed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2528,
+        1344
+      ],
+      "webhookId": "145899b7-e6ae-447e-af81-3048eb7ae9a7"
+    },
+    {
+      "parameters": {
+        "content": "/complaint-otp-message\nRequest OTP for marking the complaint resolved.",
+        "height": 240,
+        "width": 1420,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2960,
+        944
+      ],
+      "id": "bc4c7ed7-324e-466d-b7e0-8b7040550bdc",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "/complaint-closed\nWhen complaint is closed  by the admin/subadmin.",
+        "height": 420,
+        "width": 1420,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3072,
+        1184
+      ],
+      "id": "a6627d8e-02c7-46f4-ab42-e2b3c6dbd37f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "/change-assignment\nWhen complaint is assigned to another team member",
+        "height": 600,
+        "width": 1400,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3072,
+        -64
+      ],
+      "id": "6586dc2d-8945-46d7-b60c-407cb9b4e96f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team-member-message",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Webhook Trigger - Complaint Register1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2528,
+        704
+      ],
+      "id": "f2810524-4d37-44c9-a8c5-e9f7c9115feb",
+      "webhookId": "8c9bb743-080d-434c-af52-6cdd419002c8"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "change-assignment",
+        "options": {}
+      },
+      "name": "Webhook Trigger - Change Assignment",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2528,
+        192
+      ],
+      "webhookId": "3a0d8cfc-5ea3-4ac2-ba40-a9f262115dc6",
+      "id": "baea5f4d-c244-4fe0-98d6-173ec7b2c536"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "complaint-otp-message",
+        "options": {}
+      },
+      "id": "18b4ef80-3ac3-41a9-916c-17c1b8e0cc01",
+      "name": "Webhook Trigger - OTP1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2528,
+        1024
+      ],
+      "webhookId": "367ec65e-31df-4305-a0b3-7bdddde56f89"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "=We are experiencing some internal server error while registering your complaint. Please reach out to our help desk.\n\nThank you!",
+        "additionalFields": {
+          "previewUrl": false
+        }
+      },
+      "name": "WhatsApp Ticket Reply1",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1632,
+        -1120
+      ],
+      "id": "d815318f-0ccf-4432-a590-6eaafd501f33",
+      "webhookId": "89c26bf6-6161-4622-9d79-226b30351a44",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cf023556-aa9f-4408-b7ab-f3b0816e0be6",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1856,
+        -1024
+      ],
+      "id": "698c4513-5501-43ed-9d0b-03737b07d474",
+      "name": "Detect Error"
+    },
+    {
+      "parameters": {
+        "content": "/team-member-message\nWhen complaint is assigned to a team member.",
+        "height": 400,
+        "width": 1420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3072,
+        560
+      ],
+      "id": "1640e08f-97f6-44a1-b1c1-c3bec3b0cdf9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "/complaint-resolved\nWhen complaint is resolved by the team member.",
+        "height": 420,
+        "width": 1420,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3072,
+        1600
+      ],
+      "id": "6fcf61a9-2a9f-4654-8983-2b8e5fd8c595",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "complaint-resolved",
+        "options": {}
+      },
+      "id": "8e60ca54-4bce-4784-ab7d-9ae07331cf8e",
+      "name": "Webhook Trigger - Complaint resolved",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2528,
+        1760
+      ],
+      "webhookId": "ce36a2dd-bb86-4475-8d0b-7cece5e6df38"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $json.messages[0].from }}",
+        "template": "complaint_form_v1|en_US",
+        "components": {
+          "component": [
+            {
+              "type": "button",
+              "sub_type": "=flow",
+              "buttonParameters": {
+                "parameter": {
+                  "type": "text",
+                  "text": "{}"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        -224
+      ],
+      "id": "39c6e288-3ff4-4b12-a6bb-609ed5427809",
+      "name": "Send template",
+      "webhookId": "ebcd215c-a41e-48af-ae59-66bc5945be3c",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://portal.lexiumworld.com/api/complaint/create",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fullName",
+              "value": "={{ $json.payload.fullName }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.payload.phone }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ $json.payload.longitude }}"
+            },
+            {
+              "name": "latitude",
+              "value": "={{ $json.payload.latitude }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.payload.description }}"
+            },
+            {
+              "name": "otherNumber",
+              "value": "={{ $json.payload.otherNumber }}"
+            },
+            {
+              "name": "address",
+              "value": "={{ $json.payload.address }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "name": "HTTP Request Create Complaint1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1408,
+        -416
+      ],
+      "id": "33469014-b221-46ec-a76d-7aea9ac1f922"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b3124181-9d3e-4a0c-b721-ceaa0783ba72",
+              "leftValue": "={{ $json.messages[0].type }}",
+              "rightValue": "interactive",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2080,
+        -320
+      ],
+      "id": "901e3c28-dc64-4968-808f-6f0b1bc8a34d",
+      "name": "IF(form submitted)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jsonData  = JSON.parse($input.first().json.messages[0].interactive.nfm_reply.response_json)\n\nreturn jsonData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1856,
+        -416
+      ],
+      "id": "04813287-d3c3-479b-88ac-31c374f6448a",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cf023556-aa9f-4408-b7ab-f3b0816e0be6",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1184,
+        -416
+      ],
+      "id": "ff751b8a-bdf9-4fcd-8f41-d0f106000490",
+      "name": "Detect Error1"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "=We are experiencing some internal server error while registering your complaint. Please reach out to our help desk.\n\nThank you!",
+        "additionalFields": {
+          "previewUrl": false
+        }
+      },
+      "name": "WhatsApp Ticket Reply2",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -512
+      ],
+      "id": "b0315c18-e84d-4077-a4b3-a895741fe220",
+      "webhookId": "07d797d7-13a6-456f-8e88-cc8faa10a7bb",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+        "textBody": "=Thank you {{$('Code').item.json.screen_0_Registering_for_someone_else_0 ===true ? \"Sir/Madam\" :$('Code').item.json.screen_0_Full_Name_1   }},\n\n{{ $('Code').item.json.screen_0_Registering_for_someone_else_0 ? \"Your complaint on behalf of \" + $('Code').item.json.screen_0_Full_Name_1 + \" has been received.\":\"Your complaint (C-\" + $json.data.id + \") has been received.\" }}\nWe will shortly assign a technician to help {{$('Code').item.json.screen_0_Registering_for_someone_else_0 ? \"them\":\"you\"}} with {{$('Code').item.json.screen_0_Registering_for_someone_else_0 ? \"their\":\"your\"}} complaint.\n",
+        "additionalFields": {}
+      },
+      "name": "WhatsApp Ticket Reply3",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -320
+      ],
+      "id": "312ad34f-bdf4-4349-9426-6f0b9acb2b7e",
+      "webhookId": "64c12bcd-53f1-4c47-ad7f-5bf2ea6de04a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "if ($input.first().json.screen_0_Registering_for_someone_else_0) {\n  if (!$input.first().json.screen_0_WhatsApp_Number_3) {\n    return {\n      payload: {\n        \"fullName\": $input.first().json.screen_0_Full_Name_1,\n        \"phone\": $('WhatsApp Msg').first().json.contacts[0].wa_id,\n        \"longitude\": 0,\n        \"latitude\": 0,\n        \"description\": $input.first().json.screen_0_Description_4,\n        \"otherNumber\": $input.first().json.screen_0_Calling_Number_2,\n        \"address\":$input.first().json.screen_0_address_4\n      }\n    }\n  }\n  return {\n    payload: {\n      \"fullName\": $input.first().json.screen_0_Full_Name_1,\n      \"phone\": $input.first().json.screen_0_WhatsApp_Number_3,\n      \"longitude\": 0,\n      \"latitude\": 0,\n      \"description\": $input.first().json.screen_0_Description_4,\n      \"otherNumber\": $input.first().json.screen_0_Calling_Number_2,\n      \"address\":$input.first().json.screen_0_address_4\n    }\n  }\n\n} else {\n  return {\n    payload: {\n      \"fullName\": $input.first().json.screen_0_Full_Name_1,\n      \"phone\": $('WhatsApp Msg').first().json.contacts[0].wa_id,\n      \"longitude\": 0,\n      \"latitude\": 0,\n      \"description\": $input.first().json.screen_0_Description_4,\n      \"otherNumber\": $input.first().json.screen_0_Calling_Number_2,\n       \"address\":$input.first().json.screen_0_address_4\n    }\n  }\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        -416
+      ],
+      "id": "77cb6293-a9e9-421a-b64f-7b8b616656d6",
+      "name": "Create API Payload"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b11d38ba-2853-4c96-8bb1-c32d8816adbe",
+              "leftValue": "={{ $json.messages[0].context }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ee08c245-9045-4620-8555-a605846e4989",
+              "leftValue": "={{ $json.messages[0].interactive }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2304,
+        -416
+      ],
+      "id": "2d56b062-67af-46e2-801f-bb27a727bcae",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "button",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "792e6ed0-5983-4ca1-abd3-aecd459406fc"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reply from button"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -2080,
+        -608
+      ],
+      "id": "7a2f0828-1475-4dd2-838f-29ca290ac33a",
+      "name": "Switch- reply type"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messages[0].button.text }}",
+                    "rightValue": "Request Code",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3c12055f-b723-4417-a04c-9b8a2d168944"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Request Code button"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1856,
+        -608
+      ],
+      "id": "7675a6cf-a197-45db-9062-49781c1ebd16",
+      "name": "Switch-reply cases"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.contacts[0].wa_id }}",
+        "textBody": "=If you are satisfied, please share this OTP with our team member:*{{ $json.data.verificationCode }}*. Please note that if you are still not satisfied, do not share this OTP.",
+        "additionalFields": {}
+      },
+      "name": "Send OTP",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1408,
+        -608
+      ],
+      "id": "7bfdcf53-f117-475f-aefc-331c4a9583c4",
+      "webhookId": "62b3cb7e-1dea-4241-9e3a-2e6275d8cda6",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://portal.lexiumworld.com/api/complaint/update/external",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $('Webhook Trigger - OTP1').item.json.body.complaintId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer lexium123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "wa_context",
+              "value": "={{ $json.messages[0].id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2080,
+        1024
+      ],
+      "id": "63cd2ebb-beec-45a4-ad4e-bc1efd579043",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('Webhook Trigger - OTP1').item.json.body.phone }}",
+        "template": "request_code_customer_v3|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json.body.complaintId }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        1024
+      ],
+      "id": "d31fa078-5d23-4a04-810e-effa518d9eda",
+      "name": "Send template otp",
+      "webhookId": "cf04b0b8-e26e-485b-bf1e-a8eba7faa2ac",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('Webhook Trigger - Change Assignment').item.json.body.oldTeamMember.phone }}",
+        "template": "no_longer_assigned_agent_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.oldTeamMember.name }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.complaintId }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        0
+      ],
+      "id": "e32b59ec-b32a-497e-adb4-7a2729bbcf2b",
+      "name": "Template- no longer assigned",
+      "webhookId": "3a4cae20-f894-4731-a4e5-e9e57d239790",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('Webhook Trigger - Change Assignment').item.json.body.newTeamMember.phone }}",
+        "template": "complaint_assigned_agent_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.complaintId }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.name }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.otherNumber }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.phone }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.issue }}"
+                  },
+                  {
+                    "text": "={{ $json.body.newTeamMember.name }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        192
+      ],
+      "id": "1f8d3405-bdb8-4af2-a8ac-e8a3e9010cd3",
+      "name": "Template - complaint assigned agent",
+      "webhookId": "5bcf683f-5481-4ecb-b1fd-e2a6b37bd96d",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.phone }}",
+        "template": "complaint_reassigned_customer_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.name }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.newTeamMember.name }} ({{ $('Webhook Trigger - Change Assignment').item.json.body.newTeamMember.phone }})"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.complaintId }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.otherNumber }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        384
+      ],
+      "id": "4bdf3eb7-6030-41bb-8c86-09b5a8f0fdb8",
+      "name": "Template - complaint reassigned customer",
+      "webhookId": "ef0a22b4-04fc-4f27-bbb3-74bacf76a785",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://portal.lexiumworld.com/api/complaint/get/external",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer lexium123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "wa_context",
+              "value": "={{ $json.messages[0].context.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1632,
+        -608
+      ],
+      "id": "8b43d07b-460a-4e8e-9bef-03d726100e42",
+      "name": "HTTP- get complaint details"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $json.body.user.phone }}",
+        "template": "complaint_closed_customer_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json.body.complaintId }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        1248
+      ],
+      "id": "1844e690-78c8-4018-835a-286050fc8476",
+      "name": "template-complaint closed customer",
+      "webhookId": "f0a863fb-4b99-4ed4-aba4-a4f25ae54190",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $json.body.teamMember.phone }}",
+        "template": "complaint_closed_agent_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json.body.complaintId }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        1440
+      ],
+      "id": "cb976a68-4e3a-40f0-a9c9-2139fadb0c06",
+      "name": "template-complaint closed agent",
+      "webhookId": "a256d686-fa92-43f4-881b-1f6b184309f5",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $json.body.user.phone }}",
+        "template": "complaint_resolved_customer_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json.body.complaintId }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        1664
+      ],
+      "id": "d19510a1-c71b-44f0-9e0b-21ae1fd1367a",
+      "name": "template- complaint resolved customer",
+      "webhookId": "a81fec9b-e629-4849-bbbe-531b513d3d9b",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $json.body.teamMember.phone }}",
+        "template": "complaint_resolved_agent_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json.body.complaintId }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        1856
+      ],
+      "id": "dd7ec1d0-d5c8-4cee-81c1-b8e4e8f9b420",
+      "name": "template-complaint resolved agent",
+      "webhookId": "d31e60a7-9884-4d82-9073-0cff8cfc1c50",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.phone }}",
+        "template": "complaint_assigned_customer_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.name }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.complaintId }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.assignedTeamMember.name }} ({{ $('Webhook Trigger - Complaint Register1').item.json.body.assignedTeamMember.phone }})"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.otherNumber }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        800
+      ],
+      "id": "bd91a043-94b5-4f36-9427-9274cc848581",
+      "name": "Template - Complaint Assigned customer",
+      "webhookId": "b8a398a4-5f8f-4dbb-abc5-af231528c2e9",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "730428140153533",
+        "recipientPhoneNumber": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.assignedTeamMember.phone }}",
+        "template": "complaint_assigned_agent_v2|en_US",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.complaintId }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.name }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.otherNumber }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.phone }}"
+                  },
+                  {
+                    "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.issue }}"
+                  },
+                  {
+                    "text": "={{ $json.body.assignedTeamMember.name }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        608
+      ],
+      "id": "58222c46-1b55-4439-a5a8-1f2d43aee26c",
+      "name": "Template - to agent",
+      "webhookId": "0380e344-cff3-46ea-8613-8d26bc63e90c",
+      "alwaysOutputData": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "UB2pr2sAOoXHgOQC",
+          "name": "WhatsApp account - Lixium dev live"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "WhatsApp Ticket Reply": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request Create Complaint": {
+      "main": [
+        [
+          {
+            "node": "Detect Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Send to API?": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Create Complaint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Reply (Mid-Step)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Logic": {
+      "main": [
+        [
+          {
+            "node": "IF Send to API?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Msg": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger - Complaint Closed": {
+      "main": [
+        [
+          {
+            "node": "template-complaint closed customer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "template-complaint closed agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger - Complaint Register1": {
+      "main": [
+        [
+          {
+            "node": "Template - to agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Template - Complaint Assigned customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger - Change Assignment": {
+      "main": [
+        [
+          {
+            "node": "Template- no longer assigned",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Template - complaint assigned agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Template - complaint reassigned customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger - OTP1": {
+      "main": [
+        [
+          {
+            "node": "Send template otp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Error": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Ticket Reply1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Ticket Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Ticket Reply1": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook Trigger - Complaint resolved": {
+      "main": [
+        [
+          {
+            "node": "template- complaint resolved customer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "template-complaint resolved agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF(form submitted)": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Create Complaint1": {
+      "main": [
+        [
+          {
+            "node": "Detect Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Create API Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Error1": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Ticket Reply2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Ticket Reply3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create API Payload": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Create Complaint1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch- reply type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF(form submitted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch- reply type": {
+      "main": [
+        [
+          {
+            "node": "Switch-reply cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch-reply cases": {
+      "main": [
+        [
+          {
+            "node": "HTTP- get complaint details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send template otp": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP- get complaint details": {
+      "main": [
+        [
+          {
+            "node": "Send OTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "global": {
+      "919914817311": {
+        "step": 0,
+        "name": "Khushal singh",
+        "phone": "9876543210",
+        "location": "Patiala",
+        "issue": "My ac is not working"
+      },
+      "919781452072": {
+        "step": 0,
+        "name": "Tarn",
+        "phone": "9988545422",
+        "latitude": 30.422588348389,
+        "longitude": 76.287666320801,
+        "issue": "Testttinggg"
+      },
+      "917502100055": {
+        "step": 0,
+        "name": "Bunty dhillon",
+        "phone": "7502100055",
+        "latitude": 30.19693639,
+        "longitude": 74.65852996,
+        "issue": "Geyser problem"
+      },
+      "919915668595": {
+        "step": 0,
+        "name": "veer singh",
+        "phone": "9914461551",
+        "latitude": 0,
+        "longitude": 0,
+        "issue": "hjkkid"
+      }
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook Trigger - Complaint Register1": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.clourax.com",
+            "content-length": "242",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "br, gzip, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "complaintId": "C-1054",
+            "latitude": 0,
+            "longitude": 0,
+            "dateTime": "2025-09-26 13:22",
+            "issue": "New",
+            "customer": {
+              "name": "Kamal",
+              "phone": "919781452072",
+              "otherNumber": "9988545422"
+            },
+            "assignedTeamMember": {
+              "name": "Anumeet Kumar",
+              "phone": "917658044490"
+            }
+          },
+          "webhookUrl": "https://n8n.clourax.com/webhook/team-member-message",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Webhook Trigger - OTP1": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.clourax.com",
+            "content-length": "62",
+            "content-type": "application/json",
+            "x-vercel-id": "bom1::25rh8-1759119640756-ec3e3cc92d9f",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "br, gzip, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "complaintId": "C-1051",
+            "phone": "919914471661",
+            "otp": "930083"
+          },
+          "webhookUrl": "https://n8n.clourax.com/webhook/complaint-otp-message",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Webhook Trigger - Complaint Closed": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.clourax.com",
+            "content-length": "126",
+            "content-type": "application/json",
+            "x-vercel-id": "bom1::b689h-1759125544945-6667dbaf0ce1",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "br, gzip, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "complaintId": "C-1054",
+            "user": {
+              "name": "Kamal",
+              "phone": "919781452072"
+            },
+            "teamMember": {
+              "name": "Mahavir",
+              "phone": "919914471661"
+            }
+          },
+          "webhookUrl": "https://n8n.clourax.com/webhook/complaint-closed",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Webhook Trigger - Complaint resolved": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.clourax.com",
+            "content-length": "125",
+            "content-type": "application/json",
+            "x-vercel-id": "bom1::rk5p9-1759125983922-9f0f139ca8b6",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "br, gzip, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "complaintId": "C-1055",
+            "user": {
+              "name": "veer",
+              "phone": "919915668595"
+            },
+            "teamMember": {
+              "name": "Mahavir",
+              "phone": "919914471661"
+            }
+          },
+          "webhookUrl": "https://n8n.clourax.com/webhook/complaint-resolved",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Webhook Trigger - Change Assignment": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.clourax.com",
+            "content-length": "314",
+            "content-type": "application/json",
+            "x-vercel-id": "bom1::7z2nn-1759302844243-da75ffa5ca3a",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "br, gzip, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "complaintId": "C-1063",
+            "latitude": 0,
+            "longitude": 0,
+            "dateTime": "2025-09-29 15:06",
+            "issue": "My kitchen is leaking ",
+            "customer": {
+              "name": "Anumeet",
+              "phone": "919915668595",
+              "otherNumber": "9908766554"
+            },
+            "oldTeamMember": {
+              "name": "Rahul 99156",
+              "phone": "919915668595"
+            },
+            "newTeamMember": {
+              "name": "Mahavir",
+              "phone": "919914471661"
+            }
+          },
+          "webhookUrl": "https://n8n.clourax.com/webhook/change-assignment",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "WhatsApp Msg": [
+      {
+        "json": {
+          "messaging_product": "whatsapp",
+          "metadata": {
+            "display_phone_number": "918988689884",
+            "phone_number_id": "730428140153533"
+          },
+          "contacts": [
+            {
+              "profile": {
+                "name": "M"
+              },
+              "wa_id": "919914471661"
+            }
+          ],
+          "messages": [
+            {
+              "context": {
+                "from": "918988689884",
+                "id": "wamid.HBgMOTE5OTE0NDcxNjYxFQIAERgSRkZDMEY1NjkxREFENzI0NzQ3AA=="
+              },
+              "from": "919914471661",
+              "id": "wamid.HBgMOTE5OTE0NDcxNjYxFQIAEhggQUNGODNFOUEwMzk2ODA4M0RBODk1MjVFOThCREE3QzIA",
+              "timestamp": "1761560073",
+              "type": "interactive",
+              "interactive": {
+                "type": "nfm_reply",
+                "nfm_reply": {
+                  "response_json": "{\"screen_0_Full_Name_1\":\"chhh\",\"screen_0_Calling_Number_2\":\"56666\",\"screen_0_WhatsApp_Number_3\":\"788898888\",\"screen_0_Description_4\":\"chghbjhh\",\"screen_0_address_4\":\"gjghg\",\"flow_token\":\"unused\"}",
+                  "body": "Sent",
+                  "name": "flow"
+                }
+              }
+            }
+          ],
+          "field": "messages"
+        }
+      }
+    ]
+  },
+  "versionId": "93d1eab7-8a97-4ce0-a77e-5d9c3b515eda",
+  "activeVersionId": "93d1eab7-8a97-4ce0-a77e-5d9c3b515eda",
+  "triggerCount": 6,
+  "shared": [
+    {
+      "updatedAt": "2025-09-24T09:01:19.212Z",
+      "createdAt": "2025-09-24T09:01:19.212Z",
+      "role": "workflow:owner",
+      "workflowId": "DPs6wMWOzZrwOu3P",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-09T04:19:59.572Z",
+    "createdAt": "2025-12-09T04:19:59.572Z",
+    "versionId": "93d1eab7-8a97-4ce0-a77e-5d9c3b515eda",
+    "workflowId": "DPs6wMWOzZrwOu3P",
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+          "textBody": "={{'Thank you, ' + $json.data.fullName + '!  \\nYour complaint (C-'+ $json.data.id + ') has been recieved.'}}",
+          "additionalFields": {}
+        },
+        "name": "WhatsApp Ticket Reply",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -1632,
+          -928
+        ],
+        "id": "b815f734-0509-48f0-a501-a49463dfb8bf",
+        "webhookId": "eac50822-3f76-49e0-b630-1fbfa5f3e0f3",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://77f497222def.ngrok-free.app/api/complaint/create",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fullName\": \"{{ $json.name }}\",\n  \"phone\": \"{{ $('WhatsApp Msg').item.json.messages[0].from }}\",\n  \"longitude\": {{ $json.longitude }},\n  \"latitude\": {{ $json.latitude }},\n  \"description\": \"{{ $json.description }}\",\n\"otherNumber\":\"{{ $('Conversation Logic').item.json.phone }}\"\n}\n",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "HTTP Request Create Complaint",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -2080,
+          -1024
+        ],
+        "id": "505fa173-ea1c-4172-9cb8-b4fd90fdcaef"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "boolean": [
+              {
+                "value1": "={{$json.sendToApi}}",
+                "value2": true
+              }
+            ]
+          }
+        },
+        "name": "IF Send to API?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          -928
+        ],
+        "id": "7ac31b84-d01b-4018-a244-0d3ca15f2a18"
+      },
+      {
+        "parameters": {
+          "functionCode": "try {\n  const incomingMessages = $json && $json.messages ? $json.messages : null;\n  if (!incomingMessages || !incomingMessages.length) {\n    return [];\n  }\n\n  const from = incomingMessages[0].from;\n  const data = this.getWorkflowStaticData(\"global\");\n\n  if (!data[from]) {\n    data[from] = { step: 0 };\n  }\n\n  const state = data[from];\n  const text =\n    incomingMessages[0]?.text && incomingMessages[0]?.text?.body\n      ? incomingMessages[0].text.body.trim()\n      : \"\";\n  let reply;\n\n  // --- HELP KEYWORDS ---\n  const helpKeywords = [\"help\", \"support\", \"assist\", \"how\", \"help me\"];\n  if (helpKeywords.includes(text.toLowerCase())) {\n    const helpMsg = `📋 How to file a complaint:\n                  1. Type the word *complaint* to start.\n                  2. We’ll ask for your Full Name.\n                  3. Your Location (address or area).\n                  4. A brief description of the issue.\n\n                  At any time, you can type *reset* to start over.`;\n    return [{ json: { output: helpMsg, sendToApi: false, from: from } }];\n  }\n\n  // --- RESET FLOW ---\n  if (text.toLowerCase() === \"reset\") {\n    if (data?.[from]) {\n      delete data[from];\n    }\n    reply = \"No problem! Let's start over. Please type *complaint* to begin.\";\n    return [{ json: { output: reply, sendToApi: false, from: from } }];\n  }\n\n\n  switch (state.step) {\n    case 0:\n      if (text.toLowerCase() === 'complaint') {\n        reply = \"Thank you for reaching out! Let's file your complaint.\\nPlease reply with your Full Name (only alphabets and spaces):\";\n        state.step = 1;\n      }  else {\n        reply = \"Hi there! 👋 You can start by typing the word 'complaint'.\\nThis will begin the process to file your issue step-by-step.\";\n      }\n      break;\n\n    case 1: // Name\n      if (!/^[a-zA-Z\\s]+$/.test(text) || text.length < 3) {\n        reply = '❌ Invalid name format.\\n✅ Please enter your Full Name (only alphabets and spaces, at least 3 characters).';\n      } else {\n        state.name = text;\n        reply = '2️⃣ Please enter your Phone Number (10 digits only):';\n        state.step = 2;\n      }\n      break;\n\n    case 2: // Phone\n      if (!/^\\d{10}$/.test(text.replace(/\\s+/g, ''))) {\n        reply = '❌ Invalid phone number.\\n✅ Please enter a 10-digit number without spaces or special characters (e.g., 9876543210).';\n      } else {\n        state.phone = text.replace(/\\s+/g, '');\n        reply = '3️⃣ Please share your Location(from the location share feature.) or send *NA* if you don\\'t wanna share your location:';\n        state.step = 3;\n      }\n      break;\n\n    case 3: // Location'\n       if(incomingMessages[0].type==\"text\" && text===\"NA\"){\n          reply = '4️⃣ Please describe the issue (5–500 characters):';\n          state.latitude = 0;\n        state.longitude = 0;\n        state.step = 4;\n\n      }else if(incomingMessages[0].type!==\"location\"){\n         reply = '❌ Invalid location.\\n✅ Please share the location via location share feature of Whatsapp or send *NA* if you don\\'t wanna share your location.';\n      }else {\n\n       const latitude = incomingMessages[0].location.latitude\n        const longitude = incomingMessages[0].location.longitude\n        state.latitude = latitude;\n        state.longitude = longitude;\n        reply = '4️⃣ Please describe the issue (5–500 characters):';\n        state.step = 4;\n      }\n      break;\n\n    case 4: // Issue\n      if (text.length < 5 || text.length > 500) {\n        reply = '❌ Invalid description.\\n✅ Please provide a brief description of the issue (between 5 and 500 characters).';\n      } else {\n        state.issue = text;\n        state.step = 0;\n        return [{\n          json: {\n            sendToApi: true,\n            name: state.name,\n            phone: state.phone,\n            latitude:state.latitude,\n            longitude: state.longitude,\n            description: state.issue,\n            from: from\n          }\n        }];\n      }\n      break;\n\n    default:\n      state.step = 0;\n      reply = \"I'm sorry, something went wrong. Let's start over. Please type 'complaint' to begin.\";\n      break;\n  }\n  \n\n  return [{ json: { output: reply, sendToApi: false, from: from } }];\n} catch (error) {\n  console.log(\"error\",error.message)\n  const from =\n    $json && $json.messages && $json.messages[0]\n      ? $json.messages[0].from\n      : null;\n  const reply = \"Sorry, an unexpected error occurred. Please try again later.\";\n  return [{ json: { output: reply, sendToApi: false, from: from } }];\n}\n"
+        },
+        "name": "Conversation Logic",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [
+          -2528,
+          -928
+        ],
+        "id": "8d22d86a-ed0a-4d53-8f25-a06970a72d6f"
+      },
+      {
+        "parameters": {
+          "updates": [
+            "messages"
+          ],
+          "options": {}
+        },
+        "name": "WhatsApp Msg",
+        "type": "n8n-nodes-base.whatsAppTrigger",
+        "typeVersion": 1,
+        "position": [
+          -2528,
+          -416
+        ],
+        "id": "fd5e699c-9dc2-41ec-bb84-b382ee217d74",
+        "webhookId": "17573b51-82cb-49a5-b314-8e5bc89670a1",
+        "credentials": {
+          "whatsAppTriggerApi": {
+            "id": "OQYuafGhokpzDKFI",
+            "name": "Lixium-Dev"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+          "textBody": "={{$json.output}}",
+          "additionalFields": {}
+        },
+        "name": "WhatsApp Reply (Mid-Step)",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2080,
+          -832
+        ],
+        "id": "949fa329-fb42-46a9-999f-daae67931b54",
+        "webhookId": "4483e476-3dd4-418f-9876-f3566fca486b",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "complaint-closed",
+          "options": {}
+        },
+        "id": "82ba13ad-b90a-4cf3-92c7-2dc3b5974029",
+        "name": "Webhook Trigger - Complaint Closed",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          -2528,
+          1344
+        ],
+        "webhookId": "145899b7-e6ae-447e-af81-3048eb7ae9a7"
+      },
+      {
+        "parameters": {
+          "content": "/complaint-otp-message\nRequest OTP for marking the complaint resolved.",
+          "height": 240,
+          "width": 1420,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -2960,
+          944
+        ],
+        "id": "bc4c7ed7-324e-466d-b7e0-8b7040550bdc",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "/complaint-closed\nWhen complaint is closed  by the admin/subadmin.",
+          "height": 420,
+          "width": 1420,
+          "color": 3
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -3072,
+          1184
+        ],
+        "id": "a6627d8e-02c7-46f4-ab42-e2b3c6dbd37f",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "/change-assignment\nWhen complaint is assigned to another team member",
+          "height": 600,
+          "width": 1400,
+          "color": 2
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -3072,
+          -64
+        ],
+        "id": "6586dc2d-8945-46d7-b60c-407cb9b4e96f",
+        "name": "Sticky Note2"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "team-member-message",
+          "options": {
+            "rawBody": true
+          }
+        },
+        "name": "Webhook Trigger - Complaint Register1",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          -2528,
+          704
+        ],
+        "id": "f2810524-4d37-44c9-a8c5-e9f7c9115feb",
+        "webhookId": "8c9bb743-080d-434c-af52-6cdd419002c8"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "change-assignment",
+          "options": {}
+        },
+        "name": "Webhook Trigger - Change Assignment",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          -2528,
+          192
+        ],
+        "webhookId": "3a0d8cfc-5ea3-4ac2-ba40-a9f262115dc6",
+        "id": "baea5f4d-c244-4fe0-98d6-173ec7b2c536"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "complaint-otp-message",
+          "options": {}
+        },
+        "id": "18b4ef80-3ac3-41a9-916c-17c1b8e0cc01",
+        "name": "Webhook Trigger - OTP1",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          -2528,
+          1024
+        ],
+        "webhookId": "367ec65e-31df-4305-a0b3-7bdddde56f89"
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+          "textBody": "=We are experiencing some internal server error while registering your complaint. Please reach out to our help desk.\n\nThank you!",
+          "additionalFields": {
+            "previewUrl": false
+          }
+        },
+        "name": "WhatsApp Ticket Reply1",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -1632,
+          -1120
+        ],
+        "id": "d815318f-0ccf-4432-a590-6eaafd501f33",
+        "webhookId": "89c26bf6-6161-4622-9d79-226b30351a44",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cf023556-aa9f-4408-b7ab-f3b0816e0be6",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -1856,
+          -1024
+        ],
+        "id": "698c4513-5501-43ed-9d0b-03737b07d474",
+        "name": "Detect Error"
+      },
+      {
+        "parameters": {
+          "content": "/team-member-message\nWhen complaint is assigned to a team member.",
+          "height": 400,
+          "width": 1420,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -3072,
+          560
+        ],
+        "id": "1640e08f-97f6-44a1-b1c1-c3bec3b0cdf9",
+        "name": "Sticky Note3"
+      },
+      {
+        "parameters": {
+          "content": "/complaint-resolved\nWhen complaint is resolved by the team member.",
+          "height": 420,
+          "width": 1420,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -3072,
+          1600
+        ],
+        "id": "6fcf61a9-2a9f-4654-8983-2b8e5fd8c595",
+        "name": "Sticky Note4"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "complaint-resolved",
+          "options": {}
+        },
+        "id": "8e60ca54-4bce-4784-ab7d-9ae07331cf8e",
+        "name": "Webhook Trigger - Complaint resolved",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          -2528,
+          1760
+        ],
+        "webhookId": "ce36a2dd-bb86-4475-8d0b-7cece5e6df38"
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $json.messages[0].from }}",
+          "template": "complaint_form_v1|en_US",
+          "components": {
+            "component": [
+              {
+                "type": "button",
+                "sub_type": "=flow",
+                "buttonParameters": {
+                  "parameter": {
+                    "type": "text",
+                    "text": "{}"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -1856,
+          -224
+        ],
+        "id": "39c6e288-3ff4-4b12-a6bb-609ed5427809",
+        "name": "Send template",
+        "webhookId": "ebcd215c-a41e-48af-ae59-66bc5945be3c",
+        "alwaysOutputData": true,
+        "executeOnce": false,
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://portal.lexiumworld.com/api/complaint/create",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "fullName",
+                "value": "={{ $json.payload.fullName }}"
+              },
+              {
+                "name": "phone",
+                "value": "={{ $json.payload.phone }}"
+              },
+              {
+                "name": "longitude",
+                "value": "={{ $json.payload.longitude }}"
+              },
+              {
+                "name": "latitude",
+                "value": "={{ $json.payload.latitude }}"
+              },
+              {
+                "name": "description",
+                "value": "={{ $json.payload.description }}"
+              },
+              {
+                "name": "otherNumber",
+                "value": "={{ $json.payload.otherNumber }}"
+              },
+              {
+                "name": "address",
+                "value": "={{ $json.payload.address }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "HTTP Request Create Complaint1",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1408,
+          -416
+        ],
+        "id": "33469014-b221-46ec-a76d-7aea9ac1f922"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "b3124181-9d3e-4a0c-b721-ceaa0783ba72",
+                "leftValue": "={{ $json.messages[0].type }}",
+                "rightValue": "interactive",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -2080,
+          -320
+        ],
+        "id": "901e3c28-dc64-4968-808f-6f0b1bc8a34d",
+        "name": "IF(form submitted)"
+      },
+      {
+        "parameters": {
+          "jsCode": "const jsonData  = JSON.parse($input.first().json.messages[0].interactive.nfm_reply.response_json)\n\nreturn jsonData;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1856,
+          -416
+        ],
+        "id": "04813287-d3c3-479b-88ac-31c374f6448a",
+        "name": "Code"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cf023556-aa9f-4408-b7ab-f3b0816e0be6",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -1184,
+          -416
+        ],
+        "id": "ff751b8a-bdf9-4fcd-8f41-d0f106000490",
+        "name": "Detect Error1"
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+          "textBody": "=We are experiencing some internal server error while registering your complaint. Please reach out to our help desk.\n\nThank you!",
+          "additionalFields": {
+            "previewUrl": false
+          }
+        },
+        "name": "WhatsApp Ticket Reply2",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -960,
+          -512
+        ],
+        "id": "b0315c18-e84d-4077-a4b3-a895741fe220",
+        "webhookId": "07d797d7-13a6-456f-8e88-cc8faa10a7bb",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.messages[0].from }}",
+          "textBody": "=Thank you {{$('Code').item.json.screen_0_Registering_for_someone_else_0 ===true ? \"Sir/Madam\" :$('Code').item.json.screen_0_Full_Name_1   }},\n\n{{ $('Code').item.json.screen_0_Registering_for_someone_else_0 ? \"Your complaint on behalf of \" + $('Code').item.json.screen_0_Full_Name_1 + \" has been received.\":\"Your complaint (C-\" + $json.data.id + \") has been received.\" }}\nWe will shortly assign a technician to help {{$('Code').item.json.screen_0_Registering_for_someone_else_0 ? \"them\":\"you\"}} with {{$('Code').item.json.screen_0_Registering_for_someone_else_0 ? \"their\":\"your\"}} complaint.\n",
+          "additionalFields": {}
+        },
+        "name": "WhatsApp Ticket Reply3",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -960,
+          -320
+        ],
+        "id": "312ad34f-bdf4-4349-9426-6f0b9acb2b7e",
+        "webhookId": "64c12bcd-53f1-4c47-ad7f-5bf2ea6de04a",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "if ($input.first().json.screen_0_Registering_for_someone_else_0) {\n  if (!$input.first().json.screen_0_WhatsApp_Number_3) {\n    return {\n      payload: {\n        \"fullName\": $input.first().json.screen_0_Full_Name_1,\n        \"phone\": $('WhatsApp Msg').first().json.contacts[0].wa_id,\n        \"longitude\": 0,\n        \"latitude\": 0,\n        \"description\": $input.first().json.screen_0_Description_4,\n        \"otherNumber\": $input.first().json.screen_0_Calling_Number_2,\n        \"address\":$input.first().json.screen_0_address_4\n      }\n    }\n  }\n  return {\n    payload: {\n      \"fullName\": $input.first().json.screen_0_Full_Name_1,\n      \"phone\": $input.first().json.screen_0_WhatsApp_Number_3,\n      \"longitude\": 0,\n      \"latitude\": 0,\n      \"description\": $input.first().json.screen_0_Description_4,\n      \"otherNumber\": $input.first().json.screen_0_Calling_Number_2,\n      \"address\":$input.first().json.screen_0_address_4\n    }\n  }\n\n} else {\n  return {\n    payload: {\n      \"fullName\": $input.first().json.screen_0_Full_Name_1,\n      \"phone\": $('WhatsApp Msg').first().json.contacts[0].wa_id,\n      \"longitude\": 0,\n      \"latitude\": 0,\n      \"description\": $input.first().json.screen_0_Description_4,\n      \"otherNumber\": $input.first().json.screen_0_Calling_Number_2,\n       \"address\":$input.first().json.screen_0_address_4\n    }\n  }\n}\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1632,
+          -416
+        ],
+        "id": "77cb6293-a9e9-421a-b64f-7b8b616656d6",
+        "name": "Create API Payload"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "b11d38ba-2853-4c96-8bb1-c32d8816adbe",
+                "leftValue": "={{ $json.messages[0].context }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "ee08c245-9045-4620-8555-a605846e4989",
+                "leftValue": "={{ $json.messages[0].interactive }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "notExists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -2304,
+          -416
+        ],
+        "id": "2d56b062-67af-46e2-801f-bb27a727bcae",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.messages[0].type }}",
+                      "rightValue": "button",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "792e6ed0-5983-4ca1-abd3-aecd459406fc"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "reply from button"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          -2080,
+          -608
+        ],
+        "id": "7a2f0828-1475-4dd2-838f-29ca290ac33a",
+        "name": "Switch- reply type"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.messages[0].button.text }}",
+                      "rightValue": "Request Code",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "3c12055f-b723-4417-a04c-9b8a2d168944"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Request Code button"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          -1856,
+          -608
+        ],
+        "id": "7675a6cf-a197-45db-9062-49781c1ebd16",
+        "name": "Switch-reply cases"
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('WhatsApp Msg').item.json.contacts[0].wa_id }}",
+          "textBody": "=If you are satisfied, please share this OTP with our team member:*{{ $json.data.verificationCode }}*. Please note that if you are still not satisfied, do not share this OTP.",
+          "additionalFields": {}
+        },
+        "name": "Send OTP",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -1408,
+          -608
+        ],
+        "id": "7bfdcf53-f117-475f-aefc-331c4a9583c4",
+        "webhookId": "62b3cb7e-1dea-4241-9e3a-2e6275d8cda6",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=https://portal.lexiumworld.com/api/complaint/update/external",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "id",
+                "value": "={{ $('Webhook Trigger - OTP1').item.json.body.complaintId }}"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer lexium123"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "wa_context",
+                "value": "={{ $json.messages[0].id }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -2080,
+          1024
+        ],
+        "id": "63cd2ebb-beec-45a4-ad4e-bc1efd579043",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('Webhook Trigger - OTP1').item.json.body.phone }}",
+          "template": "request_code_customer_v3|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $json.body.complaintId }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          1024
+        ],
+        "id": "d31fa078-5d23-4a04-810e-effa518d9eda",
+        "name": "Send template otp",
+        "webhookId": "cf04b0b8-e26e-485b-bf1e-a8eba7faa2ac",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('Webhook Trigger - Change Assignment').item.json.body.oldTeamMember.phone }}",
+          "template": "no_longer_assigned_agent_v2|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.oldTeamMember.name }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.complaintId }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          0
+        ],
+        "id": "e32b59ec-b32a-497e-adb4-7a2729bbcf2b",
+        "name": "Template- no longer assigned",
+        "webhookId": "3a4cae20-f894-4731-a4e5-e9e57d239790",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('Webhook Trigger - Change Assignment').item.json.body.newTeamMember.phone }}",
+          "template": "complaint_assigned_agent_v2|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.complaintId }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.name }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.otherNumber }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.phone }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.issue }}"
+                    },
+                    {
+                      "text": "={{ $json.body.newTeamMember.name }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          192
+        ],
+        "id": "1f8d3405-bdb8-4af2-a8ac-e8a3e9010cd3",
+        "name": "Template - complaint assigned agent",
+        "webhookId": "5bcf683f-5481-4ecb-b1fd-e2a6b37bd96d",
+        "alwaysOutputData": false,
+        "executeOnce": false,
+        "retryOnFail": false,
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.phone }}",
+          "template": "complaint_reassigned_customer_v2|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.name }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.newTeamMember.name }} ({{ $('Webhook Trigger - Change Assignment').item.json.body.newTeamMember.phone }})"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.complaintId }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Change Assignment').item.json.body.customer.otherNumber }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          384
+        ],
+        "id": "4bdf3eb7-6030-41bb-8c86-09b5a8f0fdb8",
+        "name": "Template - complaint reassigned customer",
+        "webhookId": "ef0a22b4-04fc-4f27-bbb3-74bacf76a785",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://portal.lexiumworld.com/api/complaint/get/external",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer lexium123"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "wa_context",
+                "value": "={{ $json.messages[0].context.id }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1632,
+          -608
+        ],
+        "id": "8b43d07b-460a-4e8e-9bef-03d726100e42",
+        "name": "HTTP- get complaint details"
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $json.body.user.phone }}",
+          "template": "complaint_closed_customer_v2|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $json.body.complaintId }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          1248
+        ],
+        "id": "1844e690-78c8-4018-835a-286050fc8476",
+        "name": "template-complaint closed customer",
+        "webhookId": "f0a863fb-4b99-4ed4-aba4-a4f25ae54190",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $json.body.teamMember.phone }}",
+          "template": "complaint_closed_agent_v2|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $json.body.complaintId }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          1440
+        ],
+        "id": "cb976a68-4e3a-40f0-a9c9-2139fadb0c06",
+        "name": "template-complaint closed agent",
+        "webhookId": "a256d686-fa92-43f4-881b-1f6b184309f5",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $json.body.user.phone }}",
+          "template": "complaint_resolved_customer_v2|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $json.body.complaintId }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          1664
+        ],
+        "id": "d19510a1-c71b-44f0-9e0b-21ae1fd1367a",
+        "name": "template- complaint resolved customer",
+        "webhookId": "a81fec9b-e629-4849-bbbe-531b513d3d9b",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $json.body.teamMember.phone }}",
+          "template": "complaint_resolved_agent_v2|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $json.body.complaintId }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          1856
+        ],
+        "id": "dd7ec1d0-d5c8-4cee-81c1-b8e4e8f9b420",
+        "name": "template-complaint resolved agent",
+        "webhookId": "d31e60a7-9884-4d82-9073-0cff8cfc1c50",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.phone }}",
+          "template": "complaint_assigned_customer_v2|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.name }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.complaintId }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.assignedTeamMember.name }} ({{ $('Webhook Trigger - Complaint Register1').item.json.body.assignedTeamMember.phone }})"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.otherNumber }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          800
+        ],
+        "id": "bd91a043-94b5-4f36-9427-9274cc848581",
+        "name": "Template - Complaint Assigned customer",
+        "webhookId": "b8a398a4-5f8f-4dbb-abc5-af231528c2e9",
+        "alwaysOutputData": true,
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "phoneNumberId": "730428140153533",
+          "recipientPhoneNumber": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.assignedTeamMember.phone }}",
+          "template": "complaint_assigned_agent_v2|en_US",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.complaintId }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.name }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.otherNumber }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.customer.phone }}"
+                    },
+                    {
+                      "text": "={{ $('Webhook Trigger - Complaint Register1').item.json.body.issue }}"
+                    },
+                    {
+                      "text": "={{ $json.body.assignedTeamMember.name }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1,
+        "position": [
+          -2304,
+          608
+        ],
+        "id": "58222c46-1b55-4439-a5a8-1f2d43aee26c",
+        "name": "Template - to agent",
+        "webhookId": "0380e344-cff3-46ea-8613-8d26bc63e90c",
+        "alwaysOutputData": true,
+        "credentials": {
+          "whatsAppApi": {
+            "id": "UB2pr2sAOoXHgOQC",
+            "name": "WhatsApp account - Lixium dev live"
+          }
+        },
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "WhatsApp Ticket Reply": {
+        "main": [
+          []
+        ]
+      },
+      "HTTP Request Create Complaint": {
+        "main": [
+          [
+            {
+              "node": "Detect Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Send to API?": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Create Complaint",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "WhatsApp Reply (Mid-Step)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Conversation Logic": {
+        "main": [
+          [
+            {
+              "node": "IF Send to API?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "WhatsApp Msg": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook Trigger - Complaint Closed": {
+        "main": [
+          [
+            {
+              "node": "template-complaint closed customer",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "template-complaint closed agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook Trigger - Complaint Register1": {
+        "main": [
+          [
+            {
+              "node": "Template - to agent",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Template - Complaint Assigned customer",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook Trigger - Change Assignment": {
+        "main": [
+          [
+            {
+              "node": "Template- no longer assigned",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Template - complaint assigned agent",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Template - complaint reassigned customer",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook Trigger - OTP1": {
+        "main": [
+          [
+            {
+              "node": "Send template otp",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Detect Error": {
+        "main": [
+          [
+            {
+              "node": "WhatsApp Ticket Reply1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "WhatsApp Ticket Reply",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "WhatsApp Ticket Reply1": {
+        "main": [
+          []
+        ]
+      },
+      "Webhook Trigger - Complaint resolved": {
+        "main": [
+          [
+            {
+              "node": "template- complaint resolved customer",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "template-complaint resolved agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF(form submitted)": {
+        "main": [
+          [
+            {
+              "node": "Code",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send template",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request Create Complaint1": {
+        "main": [
+          [
+            {
+              "node": "Detect Error1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code": {
+        "main": [
+          [
+            {
+              "node": "Create API Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Detect Error1": {
+        "main": [
+          [
+            {
+              "node": "WhatsApp Ticket Reply2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "WhatsApp Ticket Reply3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create API Payload": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Create Complaint1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Switch- reply type",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "IF(form submitted)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch- reply type": {
+        "main": [
+          [
+            {
+              "node": "Switch-reply cases",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch-reply cases": {
+        "main": [
+          [
+            {
+              "node": "HTTP- get complaint details",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send template otp": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP- get complaint details": {
+        "main": [
+          [
+            {
+              "node": "Send OTP",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
