@@ -1,0 +1,579 @@
+{
+  "updatedAt": "2025-12-27T18:16:50.650Z",
+  "createdAt": "2025-12-27T18:07:24.611Z",
+  "id": "zAyrj9n9ogzYLWna",
+  "name": "WhatsApp Finance Manager (Sheets + OpenAI)",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "7d4444c5-170e-4ccf-bef1-2bb84e72f009",
+      "name": "When chat message received",
+      "webhookId": "9f0b8e91-c45e-462a-8aaa-e660003593d8"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are “Finance Manager Bot” for Clousor Technologies.\n\nYour job:\n1) Read and write to the connected Google Sheets tabs: CLIENTS, INVOICES, TASKS, TRANSACTIONS, TEMPLATES.\n2) Convert messy WhatsApp messages into clean records in the correct sheet.\n3) Reply with a short confirmation message to the user after every action.\n\nHard rules (no nonsense):\n1) Never hallucinate or assume missing data. If required fields are missing, ask a single clear question and stop.\n2) Always use the sheets as the source of truth. If something exists in the sheet, do not override it without explicit instruction.\n3) When matching a client, try in this order:\n   a) Exact phone match\n   b) Exact name match\n   c) Partial name match\n   If multiple matches, ask user to confirm phone or business_name.\n4) Phone formatting: store digits only. Keep country code if user provided it. Do not invent numbers.\n5) Dates:\n   a) Prefer YYYY-MM-DD\n   b) If user says “today/tomorrow/next monday”, convert to an actual date in Asia/Kolkata timezone.\n6) Amounts: numeric only. Currency assumed INR unless user says otherwise.\n7) Keep responses short and operational. No motivational talk.\n\nTool routing rules:\n- For READ or lookups → use READ ONLY tools (e.g., \"READ ONLY: CLIENTS\", \"READ ONLY: INVOICES\").\n- For CREATE, UPDATE, or APPEND actions → use WRITE tools.\n- Never use WRITE tools for reading data.\n- If a record already exists and needs modification → use WRITE tools with “update” mode.\n\n\nSheets and columns you must follow:\n\nCLIENTS (add or update client)\nColumns:\nclient_id, name, phone, email, business_name, package_type, retainer_amount, billing_cycle, retainer_due_day, auto_followup, status, notes\nRules:\n- package_type: retainer or one_time\n- billing_cycle: monthly or quarterly or yearly (only if retainer)\n- retainer_due_day: 1 to 31 (number)\n- auto_followup: YES or NO\n- status: active or paused or inactive\n- If client_id is missing for a new client, generate: C-<YYYYMMDD>-<last4ofphone>\n\nINVOICES (create and track invoices)\nExpected columns (common):\ninvoice_id or invoice_number, client_id, amount, invoice_date, due_date, status, notes, followup_count, last_followup_date, payment_date, payment_mode, invoice_link\nRules:\n- status: draft, sent, due, paid, overdue\n- On “create invoice”, set status = due (unless user says draft/sent)\n- On “mark paid”, set status = paid and fill payment_date and payment_mode if provided\n\nTASKS (reminders and followups)\nExpected columns (common):\ntask_id, type, client_id or client_phone, invoice_number (optional), due_datetime, priority, status, notes\nRules:\n- type: followup, invoice_send, retainer_due, reminder\n- status: open, done, snoozed\n- If user says “remind me”, create a TASKS row (do not schedule anything outside the sheet)\n- Generate task_id: T-<YYYYMMDD>-<timestamp>\n\nTRANSACTIONS (income/expense logging)\nExpected columns (common):\ntxn_id, date, type, client_id (optional), amount, mode, category, notes\nRules:\n- type: income or expense\n\nTEMPLATES (message templates)\nUse only if user asks: “use template” or “send followup message”.\nOtherwise ignore.\n\nIntents you must support (detect from user message):\n1) ADD_CLIENT\n2) UPDATE_CLIENT\n3) CREATE_INVOICE\n4) MARK_PAID\n5) SET_REMINDER (creates TASK)\n6) LIST_DUES (show pending invoices)\n7) LOG_TRANSACTION\n8) HELP (when user asks what you can do)\n9) UNKNOWN (when unclear)\n\nFor each intent, do this:\n\nADD_CLIENT:\n- If name + phone provided: add to CLIENTS\n- Reply: “Client added: <name> (<phone>)”\n\nUPDATE_CLIENT:\n- Find client, update provided fields only\n- Reply: “Client updated: <name> fields: <field list>”\n\nCREATE_INVOICE:\n- Find client first\n- Create INVOICES row with due_date and amount\n- Reply: “Invoice created for <client>: ₹<amount>, due <date>”\n\nMARK_PAID:\n- Find invoice by invoice_number (preferred) or by client + amount + date (fallback)\n- Update invoice status to paid\n- Reply: “Marked paid: <invoice_number> on <payment_date> via <mode>”\n\nSET_REMINDER:\n- Create TASK row with due_datetime and notes\n- Reply: “Reminder set for <client> on <date/time>”\n\nLIST_DUES:\n- Read INVOICES, filter status != paid\n- Reply with max 10 lines: client | invoice | amount | due_date | status\n\nLOG_TRANSACTION:\n- Append TRANSACTIONS\n- Reply: “Transaction saved: income/expense ₹<amount> <category>”\n\nHELP:\n- Reply with examples of commands (3 to 5 examples max)\n\nUNKNOWN:\n- Ask 1 clarifying question only, based on what is missing.\n\nOutput style (must follow):\n- Always return a short WhatsApp-ready message.\n- If you updated a sheet, mention what you updated.\n- If you need clarification, ask only one question.\n- If the intent involves both reading and writing (e.g., creating invoice, updating client), always READ first to find matching row, then WRITE.\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        440,
+        0
+      ],
+      "id": "29c7617d-9ec4-4b7a-989e-73dc567e68d5",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        224
+      ],
+      "id": "5e14220f-0850-472b-a1e9-a7e1e9f73cd2",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "XNOylXtje9ckQrwF",
+          "name": "Main clousor account(not use paid account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        224
+      ],
+      "id": "6ad31082-8dda-4c56-8f48-3e081a734566",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "READ ONLY: CLIENTS sheet (Finance Manager)\n\nUse this tool to look up client records in the CLIENTS tab.\nColumns: client_id, name, phone, email, business_name, package_type, retainer_amount, billing_cycle, retainer_due_da, auto_followup, status, notes.\n\nUse cases:\n- Find a client before creating an invoice or task\n- Resolve client_id using phone or name\n- Check retainer details and auto_followup setting\n\nRules:\n- Prefer search by phone (digits only) first, then exact name, then partial name\n- Do not create, update, or delete rows in this tool\n- If multiple matches, ask user to confirm phone or business_name\n",
+        "documentId": {
+          "__rl": true,
+          "value": "1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk",
+          "mode": "list",
+          "cachedResultName": "Finanace Manager",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "CLIENTS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        224
+      ],
+      "id": "9cbb335c-f47a-4a68-a223-eb811bb6edbf",
+      "name": "READ ONLY: CLIENTS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "WRITE: CLIENTS sheet (Append or Update)\n\nUse this tool to add a new client or update an existing client in the CLIENTS tab.\nMatch key priority: phone, then client_id.\n\nRules:\n- Update only fields explicitly provided by the user. Never overwrite other fields.\n- Phone must be digits only (keep country code if provided).\n- Allowed values:\n  package_type: retainer or one_time\n  auto_followup: YES or NO\n  status: active or paused or inactive\n- Never delete rows.\n- If client_id missing for a new client, generate a unique client_id (example: C-YYYYMMDD-last4phone).\n",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk",
+          "mode": "list",
+          "cachedResultName": "Finanace Manager",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "CLIENTS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "client_id"
+          ],
+          "schema": [
+            {
+              "id": "client_id",
+              "displayName": "client_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "business_name",
+              "displayName": "business_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "package_type",
+              "displayName": "package_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retainer_amount",
+              "displayName": "retainer_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "billing_cycle",
+              "displayName": "billing_cycle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retainer_due_day",
+              "displayName": "retainer_due_day",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "auto_followup",
+              "displayName": "auto_followup",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        224
+      ],
+      "id": "a4641f2b-a694-4792-9d44-1849854a8429",
+      "name": "WRITE: CLIENTS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "READ ONLY: INVOICES sheet (Finance Manager)\n\nUse this tool to read invoice records from the INVOICES tab.\nColumns: invoice_id, client_id, invoice_number, invoice_date, amount_before_gst, gst_percent, gst_amount, total_amount, status, payment_date, payment_mode, invoice_link, last_followup_da, followup_count.\n\nUse cases:\n- Find invoice by invoice_number or invoice_id\n- List pending or overdue invoices\n- Check followup_count and last_followup_da before sending followup\n\nRules:\n- Do not write, update, or delete any row in this tool\n- If invoice_number is missing in user message, ask for it (preferred identifier)\n",
+        "documentId": {
+          "__rl": true,
+          "value": "1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk",
+          "mode": "list",
+          "cachedResultName": "Finanace Manager",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 981384238,
+          "mode": "list",
+          "cachedResultName": "INVOICES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk/edit#gid=981384238"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        224
+      ],
+      "id": "d83eb65a-6fcb-45c5-8f91-6f82750132b5",
+      "name": "READ ONLY: INVOICES",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "WRITE: INVOICES sheet (Append or Update)\n\nUse this tool to create a new invoice or update an existing invoice in the INVOICES tab.\nPrimary match key: invoice_number. Secondary: invoice_id.\n\nRules:\n- CREATE INVOICE: must have client_id, invoice_number, invoice_date, total_amount or amount_before_gst.\n- Default gst_percent to 18 if not provided.\n- status allowed: draft, sent, due, paid, overdue\n- MARK PAID: set status=paid and fill payment_date, payment_mode.\n- FOLLOWUP UPDATE: increment followup_count and set last_followup_da to today.\n- Never delete rows. Never change invoice_number once created.\n",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk",
+          "mode": "list",
+          "cachedResultName": "Finanace Manager",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 981384238,
+          "mode": "list",
+          "cachedResultName": "INVOICES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GK5vU_HqjuOEbpb3EXX22WH_izxFYwCOWU9m3yjaIfk/edit#gid=981384238"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "invoice_id"
+          ],
+          "schema": [
+            {
+              "id": "invoice_id",
+              "displayName": "invoice_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "client_id",
+              "displayName": "client_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "invoice_number",
+              "displayName": "invoice_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "invoice_date",
+              "displayName": "invoice_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "amount_before_gst",
+              "displayName": "amount_before_gst",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gst_percent",
+              "displayName": "gst_percent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gst_amount",
+              "displayName": "gst_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_amount",
+              "displayName": "total_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payment_date",
+              "displayName": "payment_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payment_mode",
+              "displayName": "payment_mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "invoice_link",
+              "displayName": "invoice_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_followup_date",
+              "displayName": "last_followup_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "followup_count",
+              "displayName": "followup_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        832,
+        224
+      ],
+      "id": "4754e9db-4e18-4abe-aa6b-e735962b12ea",
+      "name": "WRITE: INVOICES",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "READ ONLY: CLIENTS": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WRITE: CLIENTS": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "READ ONLY: INVOICES": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WRITE: INVOICES": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "af7fe73f-85e7-406b-a802-d940fe513f7c",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-27T18:07:24.622Z",
+      "createdAt": "2025-12-27T18:07:24.622Z",
+      "role": "workflow:owner",
+      "workflowId": "zAyrj9n9ogzYLWna",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
