@@ -1,0 +1,140 @@
+{
+  "updatedAt": "2025-12-22T03:04:08.951Z",
+  "createdAt": "2025-12-22T03:04:03.808Z",
+  "id": "kjh00GY5ye9RQzgu",
+  "name": "psychowave-get-error",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "7ab6b2d4-8c86-4468-af51-65b5ab7ce545",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1A7uDWHEgV7YoaiNTSs0e5Ibx6_xEzbLEhNMhC24aHsc",
+          "mode": "list",
+          "cachedResultName": "PSY EXAM DATA ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1A7uDWHEgV7YoaiNTSs0e5Ibx6_xEzbLEhNMhC24aHsc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 219798137,
+          "mode": "list",
+          "cachedResultName": "workflow-status",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1A7uDWHEgV7YoaiNTSs0e5Ibx6_xEzbLEhNMhC24aHsc/edit#gid=219798137"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "running": "FALSE",
+            "row_number": 2
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "running",
+              "displayName": "running",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "time",
+              "displayName": "time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "end",
+              "displayName": "end",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "f1ef6ea3-2e97-4a66-a4db-e4b4ab726dd9",
+      "name": "END",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "END",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "942e8cf3-5b75-4472-aef5-833839b6178e",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-22T03:04:03.813Z",
+      "createdAt": "2025-12-22T03:04:03.813Z",
+      "role": "workflow:owner",
+      "workflowId": "kjh00GY5ye9RQzgu",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
