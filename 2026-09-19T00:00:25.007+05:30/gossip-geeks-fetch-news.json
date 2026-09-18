@@ -1,0 +1,384 @@
+{
+  "updatedAt": "2025-08-27T08:04:44.000Z",
+  "createdAt": "2025-05-14T12:00:59.671Z",
+  "id": "cr1vuqzRUFgrxB4l",
+  "name": "Gossip Geeks Fetch News",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "26b0bdac-dbac-49d6-917d-bf687c5f2aa0",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://taazatime.com/english/wp-json/wp/v2/posts?_embed&per_page=1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        -20
+      ],
+      "id": "bd5f8f57-23a9-487c-88e7-90d3490a06dc",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        480,
+        -20
+      ],
+      "id": "672a02d7-8e6c-41d1-a495-a19ffc0f028d",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        760,
+        420
+      ],
+      "id": "9f337453-92e0-4685-b58e-456050b13b51",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BVUg1q7AlNfpn43M",
+          "name": "Mahvi Account gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://taazatime.com/wp-json/wp/v2/posts/{{ $json.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -500
+      ],
+      "id": "7ac7b0da-fba2-4720-b0ec-11ce7b388a16",
+      "name": "Single wordpress blog get"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1eH4II5yqGTl6BpER6wUDi-ssslKoQRumBI57nP23CrA",
+          "mode": "list",
+          "cachedResultName": "wordpress",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eH4II5yqGTl6BpER6wUDi-ssslKoQRumBI57nP23CrA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eH4II5yqGTl6BpER6wUDi-ssslKoQRumBI57nP23CrA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{ $json.title.rendered }}",
+            "new title": "={{ $('Title rewrite').item.json.output }}",
+            "new content": "={{ $('Main content Changer').item.json.output }}",
+            "content": "={{ $json.content.rendered }}",
+            "thumbnail": "={{ $('Image uploaded').item.json.upload_url }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "new title",
+              "displayName": "new title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "new content",
+              "displayName": "new content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "thumbnail",
+              "displayName": "thumbnail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1020,
+        -360
+      ],
+      "id": "d1b4fe31-48b7-4213-96c5-030451351104",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional content english rewriter. I will give you a chunk of HTML content. Your task is to:\n\n1. **Rewrite** all the text, preserving the exact **meaning**, but enhancing style, flow and readability.\n2. **Keep the same HTML tags and structure** (e.g., `<p>`, `<h2>`, image tags, etc.)—do not add or remove tags.\n3. If the original content references an image (e.g., `<img src=\"…\">`), **preserve the same image tag** unchanged.\n4. Do **not** alter any numbers, model names (like “VinFast VF3”), or technical terms.\n5. Return the output as a single HTML snippet, ready to drop into a blog.\n6. <img src=\"…\"> src of image upload and return url replace with current url I have attached tool please check \n**Input HTML:**  \n{{ $json.content.rendered }}",
+        "options": {
+          "systemMessage": "You are a professional content rewriter specialized in. english blog posts. When given an HTML snippet, you must:\n\n1. Preserve the exact HTML structure and tags (e.g., `<p>`, `<h2>`, `<img>`, etc.).\n2. Rewrite all text in Hindi to enhance clarity, flow, and style, **without changing the original meaning**, numbers, product names (e.g., “VinFast VF3”) or technical terms.\n3. Retain any image tags exactly as they are; do not alter `src`, `alt` text, or placement.\n4. Output only the rewritten HTML snippet, ready to be embedded directly into a blog.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        760,
+        0
+      ],
+      "id": "ac47462d-7324-4d41-8953-c99c9da077bc",
+      "name": "Main content Changer"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional title rewriter for english blogs. When given a single blog title, your job is to:\n\n1. Rewrite the title to make it more engaging and clear.\n2. Preserve the original meaning, product names, numbers, and technical terms.\n3. Output only the rewritten title—no extra text.\n\n\nRewrite this blog title to be more compelling:\n {{ $('Loop Over Items1').item.json.title.rendered }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        1080,
+        40
+      ],
+      "id": "63d8f5b0-9247-416b-8ea4-59a20945b5e8",
+      "name": "Title rewrite"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        400
+      ],
+      "id": "01c28eb3-8a42-4e9f-9ce3-3e76a43407b8",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BVUg1q7AlNfpn43M",
+          "name": "Mahvi Account gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cdn.gossipgeeks.net/upload.php",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $('Loop Over Items1').item.json._embedded['wp:featuredmedia'][0].media_details.sizes.large.source_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        -100
+      ],
+      "id": "74c53c23-7d31-4c7b-88bc-cad3739d0034",
+      "name": "Image uploaded"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Main content Changer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Main content Changer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Single wordpress blog get": {
+      "main": [
+        []
+      ]
+    },
+    "Main content Changer": {
+      "main": [
+        [
+          {
+            "node": "Title rewrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Title rewrite": {
+      "main": [
+        [
+          {
+            "node": "Image uploaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Title rewrite",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image uploaded": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d2f27658-3dd5-4b3b-b5b9-10ba1cfd342e",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-05-14T12:00:59.676Z",
+      "createdAt": "2025-05-14T12:00:59.676Z",
+      "role": "workflow:owner",
+      "workflowId": "cr1vuqzRUFgrxB4l",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
