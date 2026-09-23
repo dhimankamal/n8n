@@ -1,0 +1,96 @@
+{
+  "updatedAt": "2025-12-31T12:54:19.391Z",
+  "createdAt": "2025-12-31T10:17:22.012Z",
+  "id": "Kcw2hvqJUbEq9QD6",
+  "name": "deep reasech test",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "94d63480-dee1-4b5c-a45f-f0dcb938ed59",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "id"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "Business:\nName: clousor technologies private limited\n"
+            },
+            {
+              "role": "system",
+              "content": "You are a senior digital auditor and competitive intelligence analyst.\n\nGoal:\nCreate a deep audit of this business’s complete online presence using ONLY publicly available information from the links provided and your own web research. Do not guess, do not invent details, do not use private data. If something is not found, write “Not found”."
+            }
+          ]
+        },
+        "builtInTools": {
+          "webSearch": {
+            "searchContextSize": "medium"
+          }
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "40422e1d-fdd7-4e00-a38c-dec0053f51b2",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "XNOylXtje9ckQrwF",
+          "name": "Main clousor account(not use paid account)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "a28475f8-105b-4571-8704-8d27cad70900",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-31T10:17:22.018Z",
+      "createdAt": "2025-12-31T10:17:22.018Z",
+      "role": "workflow:owner",
+      "workflowId": "Kcw2hvqJUbEq9QD6",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
