@@ -1,0 +1,620 @@
+{
+  "updatedAt": "2025-12-16T09:53:30.117Z",
+  "createdAt": "2025-12-16T09:17:13.659Z",
+  "id": "lK62rSmxTyHAEFpZ",
+  "name": "UPLOADPHOTOPSY",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d57f798d-198d-4056-ab5e-9c2d912d7b3b",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d73b8150-b75f-4056-8dde-e82749238609",
+      "name": "Webhook",
+      "webhookId": "d57f798d-198d-4056-ab5e-9c2d912d7b3b"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1A7uDWHEgV7YoaiNTSs0e5Ibx6_xEzbLEhNMhC24aHsc",
+          "mode": "list",
+          "cachedResultName": "PSY EXAM DATA ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1A7uDWHEgV7YoaiNTSs0e5Ibx6_xEzbLEhNMhC24aHsc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "uploaded-images",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1A7uDWHEgV7YoaiNTSs0e5Ibx6_xEzbLEhNMhC24aHsc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.body.student_file_name }}",
+            "lp": "={{ $json.body.sections[0].url }}",
+            "pa": "={{ $json.body.sections[1].url }}",
+            "lc": "={{ $json.body.sections[2].url }}",
+            "tps": "={{ $json.body.sections[3].url }}",
+            "qr": "={{ $json.body.sections[4].url }}",
+            "vss-a": "={{ $json.body.sections[5].url }}",
+            "vss-b": "={{ $json.body.sections[6].url }}",
+            "pra": "={{ $json.body.sections[7].url }}",
+            "part1-a": "={{ $json.body.sections[8].url }}",
+            "part1-b": "={{ $json.body.sections[9].url }}",
+            "part1-c": "={{ $json.body.sections[10].url }}",
+            "part2-a": "={{ $json.body.sections[11].url }}",
+            "part2-b": "={{ $json.body.sections[12].url }}",
+            "fullName": "={{ $json.body.student_details.student_full_name }}",
+            "district": "={{ $json.body.student_details.district }}",
+            "mobile": "={{ $json.body.student_details.mobile }}",
+            "rollNumber": "={{ $json.body.student_details.roll_number }}",
+            "age": "={{ $json.body.student_details.age }}",
+            "schoolName": "={{ $json.body.student_details.school_name }}",
+            "fatherName": "={{ $json.body.student_details.father_name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lp",
+              "displayName": "lp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pa",
+              "displayName": "pa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lc",
+              "displayName": "lc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tps",
+              "displayName": "tps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "qr",
+              "displayName": "qr",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "vss-a",
+              "displayName": "vss-a",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "vss-b",
+              "displayName": "vss-b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pra",
+              "displayName": "pra",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "part1-a",
+              "displayName": "part1-a",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "part1-b",
+              "displayName": "part1-b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "part1-c",
+              "displayName": "part1-c",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "part2-a",
+              "displayName": "part2-a",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "part2-b",
+              "displayName": "part2-b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fullName",
+              "displayName": "fullName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "district",
+              "displayName": "district",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mobile",
+              "displayName": "mobile",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rollNumber",
+              "displayName": "rollNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "age",
+              "displayName": "age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "schoolName",
+              "displayName": "schoolName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fatherName",
+              "displayName": "fatherName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e6e1b3d1-35a4-42c4-a991-d951cd07ab82",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "5efeeed1-1d94-429d-83e3-a169f52d34f5",
+  "activeVersionId": "5efeeed1-1d94-429d-83e3-a169f52d34f5",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-16T09:17:13.666Z",
+      "createdAt": "2025-12-16T09:17:13.666Z",
+      "role": "workflow:owner",
+      "workflowId": "lK62rSmxTyHAEFpZ",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-16T09:53:30.118Z",
+    "createdAt": "2025-12-16T09:53:30.118Z",
+    "versionId": "5efeeed1-1d94-429d-83e3-a169f52d34f5",
+    "workflowId": "lK62rSmxTyHAEFpZ",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "d57f798d-198d-4056-ab5e-9c2d912d7b3b",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "d73b8150-b75f-4056-8dde-e82749238609",
+        "name": "Webhook",
+        "webhookId": "d57f798d-198d-4056-ab5e-9c2d912d7b3b"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1A7uDWHEgV7YoaiNTSs0e5Ibx6_xEzbLEhNMhC24aHsc",
+            "mode": "list",
+            "cachedResultName": "PSY EXAM DATA ",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1A7uDWHEgV7YoaiNTSs0e5Ibx6_xEzbLEhNMhC24aHsc/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "uploaded-images",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1A7uDWHEgV7YoaiNTSs0e5Ibx6_xEzbLEhNMhC24aHsc/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "name": "={{ $json.body.student_file_name }}",
+              "lp": "={{ $json.body.sections[0].url }}",
+              "pa": "={{ $json.body.sections[1].url }}",
+              "lc": "={{ $json.body.sections[2].url }}",
+              "tps": "={{ $json.body.sections[3].url }}",
+              "qr": "={{ $json.body.sections[4].url }}",
+              "vss-a": "={{ $json.body.sections[5].url }}",
+              "vss-b": "={{ $json.body.sections[6].url }}",
+              "pra": "={{ $json.body.sections[7].url }}",
+              "part1-a": "={{ $json.body.sections[8].url }}",
+              "part1-b": "={{ $json.body.sections[9].url }}",
+              "part1-c": "={{ $json.body.sections[10].url }}",
+              "part2-a": "={{ $json.body.sections[11].url }}",
+              "part2-b": "={{ $json.body.sections[12].url }}",
+              "fullName": "={{ $json.body.student_details.student_full_name }}",
+              "district": "={{ $json.body.student_details.district }}",
+              "mobile": "={{ $json.body.student_details.mobile }}",
+              "rollNumber": "={{ $json.body.student_details.roll_number }}",
+              "age": "={{ $json.body.student_details.age }}",
+              "schoolName": "={{ $json.body.student_details.school_name }}",
+              "fatherName": "={{ $json.body.student_details.father_name }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "name",
+                "displayName": "name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "lp",
+                "displayName": "lp",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "pa",
+                "displayName": "pa",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "lc",
+                "displayName": "lc",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "tps",
+                "displayName": "tps",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "qr",
+                "displayName": "qr",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "vss-a",
+                "displayName": "vss-a",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "vss-b",
+                "displayName": "vss-b",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "pra",
+                "displayName": "pra",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "part1-a",
+                "displayName": "part1-a",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "part1-b",
+                "displayName": "part1-b",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "part1-c",
+                "displayName": "part1-c",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "part2-a",
+                "displayName": "part2-a",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "part2-b",
+                "displayName": "part2-b",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "fullName",
+                "displayName": "fullName",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "district",
+                "displayName": "district",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "mobile",
+                "displayName": "mobile",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "rollNumber",
+                "displayName": "rollNumber",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "age",
+                "displayName": "age",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "schoolName",
+                "displayName": "schoolName",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "fatherName",
+                "displayName": "fatherName",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          208,
+          0
+        ],
+        "id": "e6e1b3d1-35a4-42c4-a991-d951cd07ab82",
+        "name": "Append row in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "c44eVWIbUmibHQS7",
+            "name": "contact.itskamal Google Sheets"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "authors": "Clourax Clourax",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
