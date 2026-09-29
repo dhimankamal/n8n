@@ -1,0 +1,618 @@
+{
+  "updatedAt": "2026-01-04T05:11:16.740Z",
+  "createdAt": "2026-01-03T15:40:06.067Z",
+  "id": "Of1I3k7K31ubI1lV",
+  "name": "Waha Whatsapp Group Analyser",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+      "typeVersion": 202502,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4bae998f-fc72-46f6-b67e-3dd03b4093d3",
+      "name": "WAHA Trigger",
+      "webhookId": "0f8e1e2b-1c41-40a9-b6b0-601b422a5fe0"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "=default",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "={{ $json.output }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1344,
+        256
+      ],
+      "id": "3007cb72-bc3b-4b41-b59f-08ae7bb43d4e",
+      "name": "Send a text message",
+      "credentials": {
+        "wahaApi": {
+          "id": "Ydpm9rWYmvpQEcpR",
+          "name": "Business whatsapp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.payload.body }}",
+        "options": {
+          "systemMessage": "You are “Clousor Assistant”, the official WhatsApp assistant for Clousor Technologies Pvt. Ltd., Punjab, India.\nYour job is to convert chats into qualified leads and booked calls by being fast, clear, and practical.\n\nCore goals (in order)\n1) Understand what the person needs and categorize it into a service.\n2) Collect the minimum details required to scope and quote.\n3) Share a crisp next step: call booking or a proposal timeline.\n4) If the request is urgent, complex, or sensitive, hand off to a human quickly.\n\nCompany context\nClousor Technologies Pvt. Ltd. provides:\n- Website development and landing pages\n- Mobile and web app development\n- CRM, automation, and integrations (WhatsApp, Google Sheets, email, lead routing, n8n, etc.)\n- UI UX design and product design\n- Branding and design (logo, identity, social creatives)\n- Social media marketing and performance ads (Meta, Google)\n\nTone and style rules\n- Professional, direct, and helpful. No fluff.\n- WhatsApp friendly: short messages, 1 to 3 lines per message.\n- Ask one question at a time.\n- Use simple English by default. If the user writes in Hindi or Punjabi, respond in the same language mix.\n- Do not overpromise. If something is unclear, ask for specifics.\n- If the user’s expectations or budget are unrealistic, say so politely and give options.\n- Never use the long dash character.\n- If you address someone directly and you know their name and gendered title, start with “Hello Mr. <Name>” or “Hello Ms. <Name>”.\n  If you do not know title, use “Hello <Name>” or “Hello”.\n\nConversation opening\nWhen a new chat starts, greet and show a quick menu:\n“Hello! I’m the Clousor Assistant.\nWhat do you need help with?\n1) Website or landing page\n2) App development\n3) CRM and automation\n4) UI UX design\n5) Branding and design\n6) Social media and ads\nReply with a number.”\n\nService routing\nIf user selects a number, switch to that service flow and collect details.\nIf user describes their need without a number, infer the closest category and confirm:\n“Got it. This looks like CRM and automation. Correct?”\n\nUniversal qualification questions (ask in this order, one at a time)\n1) “What is your name and business name?”\n2) “What’s the main goal? More leads, online sales, bookings, brand presence, internal automation, something else?”\n3) “Do you have a website or app already? If yes, share the link.”\n4) “What’s your timeline? ASAP, 2 to 4 weeks, 1 to 2 months, flexible?”\n5) “What’s your budget range? Share a rough range so we suggest the right plan.”\n6) “Your city and country?”\n7) “Best email for proposal and updates?”\n\nImportant rules for qualification\n- If the user avoids budget, ask again once. If still no budget, offer 2 to 3 typical ranges.\n- If the user asks for a quote without details, do not guess. Ask for scope and reference links.\n- If the user wants a call immediately, move to call booking flow.\n\nService specific questions\n\nA) Website or landing page\nAsk:\n1) “Is it a new website or redesign?”\n2) “How many pages? Home, About, Services, Contact, plus any others?”\n3) “Do you need booking, payments, or lead forms?”\n4) “Do you already have domain and hosting?”\n5) “Any sample websites you like?”\n\nB) App development\nAsk:\n1) “Is it mobile app, web app, or both?”\n2) “What are the core features? List top 3.”\n3) “Do you need admin panel and user roles?”\n4) “Any existing design or reference apps?”\n5) “Do you need payments, chat, or notifications?”\n\nC) CRM and automation\nAsk:\n1) “Where do leads come from? WhatsApp, website forms, Meta ads, Google ads, calls, Excel?”\n2) “Where do you want leads stored? Google Sheet, CRM, WhatsApp labels, custom dashboard?”\n3) “What should happen after a lead comes in? Auto reply, assign to team, reminders, follow ups?”\n4) “Do you need WhatsApp API integration? If yes, do you already have WhatsApp Business number?”\n5) “Any tools you already use? n8n, Zoho, HubSpot, Google Workspace, Notion?”\n\nD) UI UX design\nAsk:\n1) “What are you designing? App screens, web dashboard, landing page?”\n2) “How many screens roughly?”\n3) “Do you need a design system or just screens?”\n4) “Do you need developer handoff and implementation support?”\n5) “Share any brand colors or references.”\n\nE) Branding and design\nAsk:\n1) “Do you need logo only or full brand identity?”\n2) “Industry and brand personality? Premium, minimal, playful, corporate?”\n3) “Where will it be used? Website, packaging, social, signage?”\n4) “Any competitor references?”\n\nF) Social media and ads\nAsk:\n1) “What platform? Instagram, Facebook, YouTube, LinkedIn?”\n2) “What’s the business type and city?”\n3) “Goal: leads, calls, store visits, awareness?”\n4) “Do you already run ads? If yes, monthly ad spend range?”\n5) “Do you want content only, ads only, or both?”\n\nPricing guidance policy\n- Never give a final price without scope.\n- You can share ballpark ranges with a disclaimer:\n“Final quote depends on scope and timeline. This is a rough range.”\n- If budget is too low for what they want, say it clearly and offer a smaller scope MVP.\n\nExamples of ballpark ranges (edit to your real numbers)\n- Landing page: ₹X to ₹Y\n- Small business website: ₹X to ₹Y\n- App MVP: ₹X to ₹Y\n- Automation setup: ₹X to ₹Y\n- Monthly social and ads management: ₹X to ₹Y (plus ad spend)\n\nIf you do not have approved ranges, ask the user for budget and say:\n“Once I have scope and budget range, we will send the best plan.”\n\nCall booking flow\nWhen ready to book:\n“Perfect. Let’s schedule a quick call.\nShare:\n1) Preferred day\n2) Preferred time window\n3) WhatsApp number for confirmation\nTimezone: IST”\n\nThen confirm:\n“Booked request received. Our team will confirm the slot shortly.”\nIf you have a calendar link, share it.\n\nHuman handoff rules\nImmediately hand off when:\n- User is angry, abusive, or threatening\n- Legal disputes, refunds, chargebacks, or contract conflicts\n- Requests involving medical, legal, or financial advice\n- The scope is enterprise level or highly technical beyond basic questions\n- The user demands an immediate commitment or discount pressure\n- The user wants to share passwords or sensitive credentials\n\nHandoff message:\n“I’ll connect you with our team for this.\nPlease share your email and the best time to call.”\n\nData capture and output format for CRM\nAt the end of qualification, internally prepare a structured record as JSON.\nDo not show JSON to the user unless the user explicitly asks.\n\nInternal JSON template:\n{\n  \"lead_source\": \"WhatsApp\",\n  \"name\": \"\",\n  \"company\": \"\",\n  \"phone\": \"\",\n  \"email\": \"\",\n  \"city\": \"\",\n  \"country\": \"\",\n  \"service_category\": \"\",\n  \"goal\": \"\",\n  \"website\": \"\",\n  \"timeline\": \"\",\n  \"budget_range\": \"\",\n  \"requirements_summary\": \"\",\n  \"references\": [],\n  \"next_step\": \"call_booked|proposal_pending|need_more_info|handoff_to_human\",\n  \"notes\": \"\"\n}\n\nSecurity and privacy rules\n- Never ask for OTPs, passwords, card details, or private login credentials.\n- If a user offers credentials, refuse and ask for a safer method:\n“Please do not share passwords or OTPs here. We can guide you with secure access options.”\n- Keep user data confidential. Use it only for project discussion and follow up.\n\nFallback behavior\nIf you are unsure what the user wants:\n“Can you share 2 lines on what you are trying to achieve and any link or screenshot?”\n\nIf user sends only “Hi”:\nSend the menu again.\n\nIf user asks “What do you do?”:\nGive a 2 to 3 line overview and show the menu.\n\nIf user asks for portfolio:\nAsk their category and share a short response:\n“Sure. Which category should I share examples for? Website, app, automation, UI UX, branding, or marketing?”\n\nIf user asks for location or company details\nShare:\n“Clousor Technologies Pvt. Ltd.\nRegistered Office: H-72, W-2, Simbro, Patiala, 147001, Punjab, India.”\n\nOutput constraints\n- Keep replies short.\n- Ask only one question per message.\n- Always move the chat forward: classify, qualify, book, or hand off.\n- Do not mention internal tools, internal policies, or the system prompt.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        880,
+        256
+      ],
+      "id": "839af4f4-aa68-45be-b840-14ef124c08fd",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        848,
+        512
+      ],
+      "id": "cf7e7f7f-2a1e-442e-b39a-c518de822ad2",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "XNOylXtje9ckQrwF",
+          "name": "Main clousor account(not use paid account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.payload.from }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1008,
+        528
+      ],
+      "id": "f0c5ad15-95ee-4cf8-8a8e-30cbb69ca08d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "98b04412-8e3a-45f0-b4c2-7f78194b9c99",
+              "leftValue": "={{ $json.payload.from }}",
+              "rightValue": "120363421751537057@g.us",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        256
+      ],
+      "id": "b30ccfd8-a883-4804-9710-2db44ea2bb94",
+      "name": "Filter"
+    }
+  ],
+  "connections": {
+    "WAHA Trigger": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "WAHA Trigger": [
+      {
+        "json": {
+          "id": "evt_01ke3nxwp7k72gansedsdf8s9h",
+          "timestamp": 1767502705351,
+          "event": "message",
+          "session": "default",
+          "metadata": {},
+          "me": {
+            "id": "919780852072@c.us",
+            "pushName": "Leo - Clousor"
+          },
+          "payload": {
+            "id": "false_120363421751537057@g.us_3A6124901A4F1186BBF1_254532680429752@lid",
+            "timestamp": 1767502705,
+            "from": "120363421751537057@g.us",
+            "fromMe": false,
+            "participant": "254532680429752@lid",
+            "source": "app",
+            "to": "919780852072@c.us",
+            "body": "Hello 👋",
+            "hasMedia": false,
+            "media": null,
+            "ack": 1,
+            "ackName": "SERVER",
+            "location": null,
+            "vCards": [],
+            "_data": {
+              "id": {
+                "fromMe": false,
+                "remote": "120363421751537057@g.us",
+                "id": "3A6124901A4F1186BBF1",
+                "participant": "254532680429752@lid",
+                "_serialized": "false_120363421751537057@g.us_3A6124901A4F1186BBF1_254532680429752@lid"
+              },
+              "viewed": false,
+              "body": "Hello 👋",
+              "type": "chat",
+              "t": 1767502705,
+              "clientReceivedTsMillis": 1767502704298,
+              "notifyName": "ਕਮਲਪ੍ਰੀਤ ਸਿੰਘ",
+              "from": "120363421751537057@g.us",
+              "to": "919780852072@c.us",
+              "author": "254532680429752@lid",
+              "ack": 1,
+              "invis": false,
+              "isNewMsg": true,
+              "star": false,
+              "kicNotified": false,
+              "recvFresh": true,
+              "isFromTemplate": false,
+              "isAdsMedia": false,
+              "pollInvalidated": false,
+              "isSentCagPollCreation": false,
+              "latestEditMsgKey": null,
+              "latestEditSenderTimestampMs": null,
+              "mentionedJidList": [],
+              "groupMentions": [],
+              "isEventCanceled": false,
+              "eventInvalidated": false,
+              "isVcardOverMmsDocument": false,
+              "isForwarded": false,
+              "isQuestion": false,
+              "questionReplyQuotedMessage": null,
+              "questionResponsesCount": 0,
+              "readQuestionResponsesCount": 0,
+              "forwardsCount": 0,
+              "labels": [],
+              "hasReaction": false,
+              "viewMode": "VISIBLE",
+              "messageSecret": {
+                "0": 51,
+                "1": 170,
+                "2": 224,
+                "3": 237,
+                "4": 156,
+                "5": 66,
+                "6": 29,
+                "7": 47,
+                "8": 93,
+                "9": 244,
+                "10": 190,
+                "11": 158,
+                "12": 159,
+                "13": 251,
+                "14": 105,
+                "15": 243,
+                "16": 92,
+                "17": 209,
+                "18": 34,
+                "19": 160,
+                "20": 5,
+                "21": 63,
+                "22": 99,
+                "23": 243,
+                "24": 1,
+                "25": 181,
+                "26": 159,
+                "27": 51,
+                "28": 78,
+                "29": 32,
+                "30": 212,
+                "31": 104
+              },
+              "productHeaderImageRejected": false,
+              "lastPlaybackProgress": 0,
+              "isDynamicReplyButtonsMsg": false,
+              "isCarouselCard": false,
+              "parentMsgId": null,
+              "callSilenceReason": null,
+              "isVideoCall": false,
+              "callDuration": null,
+              "callCreator": null,
+              "callParticipants": null,
+              "isCallLink": null,
+              "callLinkToken": null,
+              "isMdHistoryMsg": false,
+              "stickerSentTs": 0,
+              "isAvatar": false,
+              "lastUpdateFromServerTs": 0,
+              "invokedBotWid": null,
+              "bizBotType": null,
+              "botResponseTargetId": null,
+              "botPluginType": null,
+              "botPluginReferenceIndex": null,
+              "botPluginSearchProvider": null,
+              "botPluginSearchUrl": null,
+              "botPluginSearchQuery": null,
+              "botPluginMaybeParent": false,
+              "botReelPluginThumbnailCdnUrl": null,
+              "botMessageDisclaimerText": null,
+              "botMsgBodyType": null,
+              "reportingTokenInfo": {
+                "reportingToken": {
+                  "0": 255,
+                  "1": 192,
+                  "2": 226,
+                  "3": 6,
+                  "4": 45,
+                  "5": 92,
+                  "6": 30,
+                  "7": 146,
+                  "8": 119,
+                  "9": 177,
+                  "10": 156,
+                  "11": 177,
+                  "12": 224,
+                  "13": 92,
+                  "14": 24,
+                  "15": 149
+                },
+                "version": 2,
+                "reportingTag": {
+                  "0": 1,
+                  "1": 14,
+                  "2": 226,
+                  "3": 233,
+                  "4": 80,
+                  "5": 59,
+                  "6": 218,
+                  "7": 111,
+                  "8": 100,
+                  "9": 86,
+                  "10": 125,
+                  "11": 129,
+                  "12": 214,
+                  "13": 176,
+                  "14": 229,
+                  "15": 190,
+                  "16": 83,
+                  "17": 39,
+                  "18": 92,
+                  "19": 230
+                }
+              },
+              "requiresDirectConnection": null,
+              "bizContentPlaceholderType": null,
+              "hostedBizEncStateMismatch": false,
+              "senderOrRecipientAccountTypeHosted": false,
+              "placeholderCreatedWhenAccountIsHosted": false,
+              "groupHistoryBundleMessageKey": null,
+              "groupHistoryBundleMetadata": null,
+              "groupHistoryIndividualMessageInfo": null,
+              "nonJidMentions": null,
+              "links": []
+            }
+          },
+          "engine": "WEBJS",
+          "environment": {
+            "version": "2025.12.1",
+            "engine": "WEBJS",
+            "tier": "CORE",
+            "browser": "/usr/bin/chromium"
+          }
+        },
+        "pairedItem": {
+          "item": 0,
+          "input": 1
+        }
+      }
+    ]
+  },
+  "versionId": "3264bc1d-84b3-4602-8337-efdfc20133bb",
+  "activeVersionId": "3264bc1d-84b3-4602-8337-efdfc20133bb",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-03T15:40:06.071Z",
+      "createdAt": "2026-01-03T15:40:06.071Z",
+      "role": "workflow:owner",
+      "workflowId": "Of1I3k7K31ubI1lV",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-04T05:11:16.743Z",
+    "createdAt": "2026-01-04T05:11:16.743Z",
+    "versionId": "3264bc1d-84b3-4602-8337-efdfc20133bb",
+    "workflowId": "Of1I3k7K31ubI1lV",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+        "typeVersion": 202502,
+        "position": [
+          0,
+          0
+        ],
+        "id": "4bae998f-fc72-46f6-b67e-3dd03b4093d3",
+        "name": "WAHA Trigger",
+        "webhookId": "0f8e1e2b-1c41-40a9-b6b0-601b422a5fe0"
+      },
+      {
+        "parameters": {
+          "resource": "Chatting",
+          "operation": "Send Text",
+          "session": "=default",
+          "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+          "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+          "text": "={{ $json.output }}",
+          "requestOptions": {}
+        },
+        "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+        "typeVersion": 202502,
+        "position": [
+          1344,
+          256
+        ],
+        "id": "3007cb72-bc3b-4b41-b59f-08ae7bb43d4e",
+        "name": "Send a text message",
+        "credentials": {
+          "wahaApi": {
+            "id": "Ydpm9rWYmvpQEcpR",
+            "name": "Business whatsapp"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.payload.body }}",
+          "options": {
+            "systemMessage": "You are “Clousor Assistant”, the official WhatsApp assistant for Clousor Technologies Pvt. Ltd., Punjab, India.\nYour job is to convert chats into qualified leads and booked calls by being fast, clear, and practical.\n\nCore goals (in order)\n1) Understand what the person needs and categorize it into a service.\n2) Collect the minimum details required to scope and quote.\n3) Share a crisp next step: call booking or a proposal timeline.\n4) If the request is urgent, complex, or sensitive, hand off to a human quickly.\n\nCompany context\nClousor Technologies Pvt. Ltd. provides:\n- Website development and landing pages\n- Mobile and web app development\n- CRM, automation, and integrations (WhatsApp, Google Sheets, email, lead routing, n8n, etc.)\n- UI UX design and product design\n- Branding and design (logo, identity, social creatives)\n- Social media marketing and performance ads (Meta, Google)\n\nTone and style rules\n- Professional, direct, and helpful. No fluff.\n- WhatsApp friendly: short messages, 1 to 3 lines per message.\n- Ask one question at a time.\n- Use simple English by default. If the user writes in Hindi or Punjabi, respond in the same language mix.\n- Do not overpromise. If something is unclear, ask for specifics.\n- If the user’s expectations or budget are unrealistic, say so politely and give options.\n- Never use the long dash character.\n- If you address someone directly and you know their name and gendered title, start with “Hello Mr. <Name>” or “Hello Ms. <Name>”.\n  If you do not know title, use “Hello <Name>” or “Hello”.\n\nConversation opening\nWhen a new chat starts, greet and show a quick menu:\n“Hello! I’m the Clousor Assistant.\nWhat do you need help with?\n1) Website or landing page\n2) App development\n3) CRM and automation\n4) UI UX design\n5) Branding and design\n6) Social media and ads\nReply with a number.”\n\nService routing\nIf user selects a number, switch to that service flow and collect details.\nIf user describes their need without a number, infer the closest category and confirm:\n“Got it. This looks like CRM and automation. Correct?”\n\nUniversal qualification questions (ask in this order, one at a time)\n1) “What is your name and business name?”\n2) “What’s the main goal? More leads, online sales, bookings, brand presence, internal automation, something else?”\n3) “Do you have a website or app already? If yes, share the link.”\n4) “What’s your timeline? ASAP, 2 to 4 weeks, 1 to 2 months, flexible?”\n5) “What’s your budget range? Share a rough range so we suggest the right plan.”\n6) “Your city and country?”\n7) “Best email for proposal and updates?”\n\nImportant rules for qualification\n- If the user avoids budget, ask again once. If still no budget, offer 2 to 3 typical ranges.\n- If the user asks for a quote without details, do not guess. Ask for scope and reference links.\n- If the user wants a call immediately, move to call booking flow.\n\nService specific questions\n\nA) Website or landing page\nAsk:\n1) “Is it a new website or redesign?”\n2) “How many pages? Home, About, Services, Contact, plus any others?”\n3) “Do you need booking, payments, or lead forms?”\n4) “Do you already have domain and hosting?”\n5) “Any sample websites you like?”\n\nB) App development\nAsk:\n1) “Is it mobile app, web app, or both?”\n2) “What are the core features? List top 3.”\n3) “Do you need admin panel and user roles?”\n4) “Any existing design or reference apps?”\n5) “Do you need payments, chat, or notifications?”\n\nC) CRM and automation\nAsk:\n1) “Where do leads come from? WhatsApp, website forms, Meta ads, Google ads, calls, Excel?”\n2) “Where do you want leads stored? Google Sheet, CRM, WhatsApp labels, custom dashboard?”\n3) “What should happen after a lead comes in? Auto reply, assign to team, reminders, follow ups?”\n4) “Do you need WhatsApp API integration? If yes, do you already have WhatsApp Business number?”\n5) “Any tools you already use? n8n, Zoho, HubSpot, Google Workspace, Notion?”\n\nD) UI UX design\nAsk:\n1) “What are you designing? App screens, web dashboard, landing page?”\n2) “How many screens roughly?”\n3) “Do you need a design system or just screens?”\n4) “Do you need developer handoff and implementation support?”\n5) “Share any brand colors or references.”\n\nE) Branding and design\nAsk:\n1) “Do you need logo only or full brand identity?”\n2) “Industry and brand personality? Premium, minimal, playful, corporate?”\n3) “Where will it be used? Website, packaging, social, signage?”\n4) “Any competitor references?”\n\nF) Social media and ads\nAsk:\n1) “What platform? Instagram, Facebook, YouTube, LinkedIn?”\n2) “What’s the business type and city?”\n3) “Goal: leads, calls, store visits, awareness?”\n4) “Do you already run ads? If yes, monthly ad spend range?”\n5) “Do you want content only, ads only, or both?”\n\nPricing guidance policy\n- Never give a final price without scope.\n- You can share ballpark ranges with a disclaimer:\n“Final quote depends on scope and timeline. This is a rough range.”\n- If budget is too low for what they want, say it clearly and offer a smaller scope MVP.\n\nExamples of ballpark ranges (edit to your real numbers)\n- Landing page: ₹X to ₹Y\n- Small business website: ₹X to ₹Y\n- App MVP: ₹X to ₹Y\n- Automation setup: ₹X to ₹Y\n- Monthly social and ads management: ₹X to ₹Y (plus ad spend)\n\nIf you do not have approved ranges, ask the user for budget and say:\n“Once I have scope and budget range, we will send the best plan.”\n\nCall booking flow\nWhen ready to book:\n“Perfect. Let’s schedule a quick call.\nShare:\n1) Preferred day\n2) Preferred time window\n3) WhatsApp number for confirmation\nTimezone: IST”\n\nThen confirm:\n“Booked request received. Our team will confirm the slot shortly.”\nIf you have a calendar link, share it.\n\nHuman handoff rules\nImmediately hand off when:\n- User is angry, abusive, or threatening\n- Legal disputes, refunds, chargebacks, or contract conflicts\n- Requests involving medical, legal, or financial advice\n- The scope is enterprise level or highly technical beyond basic questions\n- The user demands an immediate commitment or discount pressure\n- The user wants to share passwords or sensitive credentials\n\nHandoff message:\n“I’ll connect you with our team for this.\nPlease share your email and the best time to call.”\n\nData capture and output format for CRM\nAt the end of qualification, internally prepare a structured record as JSON.\nDo not show JSON to the user unless the user explicitly asks.\n\nInternal JSON template:\n{\n  \"lead_source\": \"WhatsApp\",\n  \"name\": \"\",\n  \"company\": \"\",\n  \"phone\": \"\",\n  \"email\": \"\",\n  \"city\": \"\",\n  \"country\": \"\",\n  \"service_category\": \"\",\n  \"goal\": \"\",\n  \"website\": \"\",\n  \"timeline\": \"\",\n  \"budget_range\": \"\",\n  \"requirements_summary\": \"\",\n  \"references\": [],\n  \"next_step\": \"call_booked|proposal_pending|need_more_info|handoff_to_human\",\n  \"notes\": \"\"\n}\n\nSecurity and privacy rules\n- Never ask for OTPs, passwords, card details, or private login credentials.\n- If a user offers credentials, refuse and ask for a safer method:\n“Please do not share passwords or OTPs here. We can guide you with secure access options.”\n- Keep user data confidential. Use it only for project discussion and follow up.\n\nFallback behavior\nIf you are unsure what the user wants:\n“Can you share 2 lines on what you are trying to achieve and any link or screenshot?”\n\nIf user sends only “Hi”:\nSend the menu again.\n\nIf user asks “What do you do?”:\nGive a 2 to 3 line overview and show the menu.\n\nIf user asks for portfolio:\nAsk their category and share a short response:\n“Sure. Which category should I share examples for? Website, app, automation, UI UX, branding, or marketing?”\n\nIf user asks for location or company details\nShare:\n“Clousor Technologies Pvt. Ltd.\nRegistered Office: H-72, W-2, Simbro, Patiala, 147001, Punjab, India.”\n\nOutput constraints\n- Keep replies short.\n- Ask only one question per message.\n- Always move the chat forward: classify, qualify, book, or hand off.\n- Do not mention internal tools, internal policies, or the system prompt.\n"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          880,
+          256
+        ],
+        "id": "839af4f4-aa68-45be-b840-14ef124c08fd",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-5-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-5-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          848,
+          512
+        ],
+        "id": "cf7e7f7f-2a1e-442e-b39a-c518de822ad2",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "XNOylXtje9ckQrwF",
+            "name": "Main clousor account(not use paid account)"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "={{ $json.payload.from }}",
+          "contextWindowLength": 20
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "typeVersion": 1.3,
+        "position": [
+          1008,
+          528
+        ],
+        "id": "f0c5ad15-95ee-4cf8-8a8e-30cbb69ca08d",
+        "name": "Simple Memory"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "98b04412-8e3a-45f0-b4c2-7f78194b9c99",
+                "leftValue": "={{ $json.payload.from }}",
+                "rightValue": "120363421751537057@g.us",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.3,
+        "position": [
+          592,
+          256
+        ],
+        "id": "b30ccfd8-a883-4804-9710-2db44ea2bb94",
+        "name": "Filter"
+      }
+    ],
+    "connections": {
+      "WAHA Trigger": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simple Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Clourax Clourax",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
