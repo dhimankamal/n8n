@@ -1,0 +1,173 @@
+{
+  "updatedAt": "2025-09-07T17:06:57.000Z",
+  "createdAt": "2025-09-07T14:17:55.901Z",
+  "id": "S0O4TSpMlt5ysWPL",
+  "name": "Facebook Ads tracker",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {}
+          ]
+        }
+      },
+      "name": "Daily 12:00 Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        880,
+        2144
+      ],
+      "id": "cb3bc91d-34e4-4731-bb96-28e69fa3b172"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build date range for yesterday (format YYYY-MM-DD)\nconst now = new Date();\nconst yesterday = new Date(now);\nyesterday.setDate(now.getDate() - 1);\n\nfunction fmt(d){ return d.toISOString().split('T')[0]; }\n\nitems[0] = { json: { currentPeriod: { since: fmt(yesterday), until: fmt(yesterday) } } };\nreturn items;"
+      },
+      "name": "Calculate date (yesterday)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        2144
+      ],
+      "id": "c1930623-7f74-47e0-a46f-78e5cf1f8b1e"
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v22.0",
+        "node": "act_3387241381569471",
+        "edge": "insights",
+        "options": {
+          "queryParametersJson": "={\n  \"fields\": \"campaign_name,impressions,clicks,reach,spend,inline_link_clicks,inline_link_click_ctr,actions\",\n \"date_preset\": \"maximum\",\n  \"level\": \"campaign\",\n  \"limit\": \"500\",\n \"filtering\": [\n    {\n      \"field\": \"campaign.effective_status\",\n      \"operator\": \"IN\",\n      \"value\": [\"ACTIVE\"]\n    }\n  ]\n}"
+        }
+      },
+      "name": "FB: campaign insights",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        2144
+      ],
+      "id": "f9c2a9db-0a63-42c5-8ad8-a3d112ed9e64",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "ZG3cLFLXJjL0Ig1y",
+          "name": "clousor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const rows = $json.data || [];\nlet lines = [];\n\nrows.forEach(r => {\n  const name = r.campaign_name || 'Unknown';\n  const spend = r.spend ? Number(r.spend).toFixed(2) : '0';\n  const clicks = r.clicks || r.inline_link_clicks || 0;\n  const impressions = r.impressions || 0;\n  const ctr = impressions ? ((clicks / impressions) * 100).toFixed(2) + '%' : '-';\n\n  // find main action (like post_engagement, lead, purchase)\n  let mainAction = '';\n  let mainValue = 0;\n  if (Array.isArray(r.actions)) {\n    r.actions.forEach(a => {\n      if (['lead', 'purchase', 'post_engagement'].some(k => a.action_type.toLowerCase().includes(k))) {\n        mainAction = a.action_type;\n        mainValue = a.value;\n      }\n    });\n  }\n\n  lines.push(\n`*${name}*\n  • Spend: ₹${spend}\n  • Impressions: ${impressions}\n  • Clicks: ${clicks}\n  • CTR: ${ctr}` +\n  (mainAction ? `\\n  • ${mainAction}: ${mainValue}` : '')\n  );\n});\n\nconst message = `*Clousor Ads Daily Report*\\n\\n${lines.join('\\n\\n')}`;\nreturn [{ json: { message } }];\n"
+      },
+      "name": "Build Slack message",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        2144
+      ],
+      "id": "652765ef-09af-42d1-8801-228c747f51c1"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08M07QTQ77",
+          "mode": "list",
+          "cachedResultName": "test"
+        },
+        "text": "={{$json[\"message\"]}}",
+        "otherOptions": {}
+      },
+      "name": "Slack Post",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        2144
+      ],
+      "id": "2130d822-a7a9-4f99-bf31-0510e7ad19ff",
+      "webhookId": "df9653c7-d2c0-44bd-90bf-74c823e620b6",
+      "credentials": {
+        "slackApi": {
+          "id": "2LlRRGmYe6uTO8Xv",
+          "name": "Clousor N8N"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 12:00 Trigger": {
+      "main": [
+        [
+          {
+            "node": "Calculate date (yesterday)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate date (yesterday)": {
+      "main": [
+        [
+          {
+            "node": "FB: campaign insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FB: campaign insights": {
+      "main": [
+        [
+          {
+            "node": "Build Slack message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slack message": {
+      "main": [
+        [
+          {
+            "node": "Slack Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9eb100d4-3bfc-4a11-b1bd-3ae9c9177707",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-09-07T14:17:55.912Z",
+      "createdAt": "2025-09-07T14:17:55.912Z",
+      "role": "workflow:owner",
+      "workflowId": "S0O4TSpMlt5ysWPL",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
