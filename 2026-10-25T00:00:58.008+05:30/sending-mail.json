@@ -1,0 +1,86 @@
+{
+  "updatedAt": "2025-11-25T15:06:49.000Z",
+  "createdAt": "2025-11-25T13:30:20.853Z",
+  "id": "SXSi3EtaAJLiOOVx",
+  "name": "Sending Mail",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "21990549-f77b-4c71-9dda-2c2c1294c1f5",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fromEmail": "kamal@clousor.in",
+        "toEmail": "dhimank079@gmail.com",
+        "subject": "This test by n8n",
+        "emailFormat": "text",
+        "text": "this is test",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        0
+      ],
+      "id": "b55c7d71-2703-45f2-8437-3d4fe19245e6",
+      "name": "Send email",
+      "webhookId": "112751c0-9aa8-4619-99b1-a21157978fa7",
+      "credentials": {
+        "smtp": {
+          "id": "BirnamwVXP5zORBD",
+          "name": "kamal@clousor.in"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "a70d04dd-0c56-4841-8e87-d946f1b82a83",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-25T13:30:20.857Z",
+      "createdAt": "2025-11-25T13:30:20.857Z",
+      "role": "workflow:owner",
+      "workflowId": "SXSi3EtaAJLiOOVx",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
