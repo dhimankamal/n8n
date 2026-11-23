@@ -1,0 +1,68 @@
+{
+  "updatedAt": "2025-08-27T08:08:57.000Z",
+  "createdAt": "2025-04-15T03:05:26.230Z",
+  "id": "04g1Fug7vu4JJ4Cv",
+  "name": "My workflow 3",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "376861b0-c411-4ea2-a2c6-8dbbb5a506eb",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://www.instagram.com/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "7cd71edf-46e5-4440-81e5-0e5cda238fdb",
+      "name": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "e4b65301-6550-4560-a787-bd9dbd53a647",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-04-15T03:05:26.236Z",
+      "createdAt": "2025-04-15T03:05:26.236Z",
+      "role": "workflow:owner",
+      "workflowId": "04g1Fug7vu4JJ4Cv",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
