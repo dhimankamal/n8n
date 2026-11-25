@@ -1,0 +1,314 @@
+{
+  "updatedAt": "2025-12-18T08:45:15.810Z",
+  "createdAt": "2025-12-15T03:10:03.686Z",
+  "id": "gWF6jdNL6hbYs0Ct",
+  "name": "Drive Folder Videos to Google Sheet",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "499d0570-dbcc-474a-b832-38aa1b2981ef",
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        1904
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "mimeType contains 'video/' and trashed = false",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1r-gdFGZk8jKdkiEOKXiboJra8NwV91e-",
+            "mode": "id"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {
+          "fields": [
+            "id",
+            "name",
+            "mimeType",
+            "webViewLink",
+            "size",
+            "createdTime",
+            "modifiedTime"
+          ]
+        }
+      },
+      "id": "8340c2ca-7c66-40ce-80db-8febc3123dda",
+      "name": "Search videos in folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -16,
+        1904
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "aVptThQEykPvXOYs",
+          "name": "kamal.clousor@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "FILE_ID",
+              "value": "={{$json.id}}"
+            },
+            {
+              "name": "NAME",
+              "value": "={{$json.name}}"
+            },
+            {
+              "name": "VIEW_LINK",
+              "value": "={{$json.webViewLink || (\"https://drive.google.com/file/d/\" + $json.id + \"/view\")}}"
+            },
+            {
+              "name": "DOWNLOAD_LINK",
+              "value": "={{\"https://drive.google.com/uc?export=download&id=\" + $json.id}}"
+            },
+            {
+              "name": "OPEN",
+              "value": "={{'=HYPERLINK(\"' + ($json.webViewLink || (\"https://drive.google.com/file/d/\" + $json.id + \"/view\")) + '\",\"Open\")'}}"
+            },
+            {
+              "name": "MIME_TYPE",
+              "value": "={{$json.mimeType}}"
+            },
+            {
+              "name": "SIZE_BYTES",
+              "value": "={{$json.size}}"
+            },
+            {
+              "name": "CREATED_TIME",
+              "value": "={{$json.createdTime}}"
+            },
+            {
+              "name": "MODIFIED_TIME",
+              "value": "={{$json.modifiedTime}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "76a2e0a1-40d9-4d72-b938-900381944eb6",
+      "name": "Make row",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        208,
+        1904
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1y-ih7BPs62Id825tcZR62-z1lQHojIAmKposMC9k8ew",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "raw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y-ih7BPs62Id825tcZR62-z1lQHojIAmKposMC9k8ew/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "FILE_ID": "={{ $json.FILE_ID }}",
+            "NAME": "={{ $json.NAME }}",
+            "VIEW_LINK": "={{ $json.VIEW_LINK }}",
+            "DOWNLOAD_LINK": "={{ $json.DOWNLOAD_LINK }}",
+            "OPEN": "={{ $json.OPEN }}",
+            "MIME_TYPE": "={{ $json.MIME_TYPE }}",
+            "SIZE_BYTES": "={{ $json.SIZE_BYTES }}",
+            "CREATED_TIME": "={{ $json.CREATED_TIME }}",
+            "MODIFIED_TIME": "={{ $json.MODIFIED_TIME }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "FILE_ID",
+              "displayName": "FILE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VIEW_LINK",
+              "displayName": "VIEW_LINK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "DOWNLOAD_LINK",
+              "displayName": "DOWNLOAD_LINK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "OPEN",
+              "displayName": "OPEN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "MIME_TYPE",
+              "displayName": "MIME_TYPE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SIZE_BYTES",
+              "displayName": "SIZE_BYTES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CREATED_TIME",
+              "displayName": "CREATED_TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "MODIFIED_TIME",
+              "displayName": "MODIFIED_TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "77ad11e2-3aef-4c3b-83a2-0d9ecefe3000",
+      "name": "Append to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        1904
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c44eVWIbUmibHQS7",
+          "name": "contact.itskamal Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [
+        [
+          {
+            "node": "Search videos in folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search videos in folder": {
+      "main": [
+        [
+          {
+            "node": "Make row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make row": {
+      "main": [
+        [
+          {
+            "node": "Append to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "e1ade34a-5253-45ae-b1ff-e827791d7399",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-15T03:10:03.699Z",
+      "createdAt": "2025-12-15T03:10:03.699Z",
+      "role": "workflow:owner",
+      "workflowId": "gWF6jdNL6hbYs0Ct",
+      "projectId": "ZX30KUrzrE1L7qmM"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
